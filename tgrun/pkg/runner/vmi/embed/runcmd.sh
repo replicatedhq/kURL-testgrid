@@ -1,24 +1,6 @@
 #!/bin/bash
 
-set -x
-
-function command_exists() {
-    command -v "$@" > /dev/null 2>&1
-}
-
-function setup_runner() {
-    setenforce 0 || true # rhel variants
-
-    echo "$TEST_ID" > /tmp/testgrid-id
-
-    if [ ! -c /dev/urandom ]; then
-        /bin/mknod -m 0666 /dev/urandom c 1 9 && /bin/chown root:root /dev/urandom
-    fi
-
-    echo "OS INFO:"
-    cat /etc/*-release
-    echo ""
-}
+source /opt/kurl-testgrid/common.sh
 
 function run_install() {
     AIRGAP=
@@ -47,6 +29,7 @@ function run_install() {
             echo "failed to unpack airgap file with status $tar_exit_status"
             send_logs
             report_failure "airgap_download"
+            report_status_update "failed"
             exit 1
         fi
     else
@@ -56,7 +39,7 @@ function run_install() {
 
     echo "running kurl install"
 
-    cat install.sh | timeout 30m bash -s $AIRGAP_FLAG
+    cat install.sh | timeout 30m bash -s $AIRGAP_FLAG ${KURL_FLAGS[@]}
     KURL_EXIT_STATUS=$?
 
     export KUBECONFIG=/etc/kubernetes/admin.conf
@@ -114,6 +97,7 @@ function run_upgrade() {
             echo "failed to unpack airgap file with status $tar_exit_status"
             send_logs
             report_failure "airgap_download"
+            report_status_update "failed"
             exit 1
         fi
     else
@@ -123,7 +107,7 @@ function run_upgrade() {
 
     echo "running kurl upgrade"
 
-    cat install.sh | timeout 30m bash -s $AIRGAP_UPGRADE_FLAG
+    cat install.sh | timeout 30m bash -s $AIRGAP_UPGRADE_FLAG ${KURL_FLAGS[@]}
     KURL_EXIT_STATUS=$?
 
     if [ "$KURL_EXIT_STATUS" -eq 0 ]; then
@@ -152,6 +136,7 @@ function run_post_install_script() {
 
     if [ "$exit_status" -ne 0 ]; then
         report_failure "post_install_script"
+        report_status_update "failed"
         collect_support_bundle
         exit 1
     fi
@@ -169,6 +154,7 @@ function run_post_upgrade_script() {
 
     if [ "$exit_status" -ne 0 ]; then
         report_failure "post_upgrade_script"
+        report_status_update "failed"
         collect_support_bundle
         exit 1
     fi
@@ -194,6 +180,47 @@ function collect_debug_info_after_kurl() {
     echo "running pods after completion:";
     kubectl get pods -A || true
     echo "";
+    echo "node descriptions after completion:";
+    kubectl describe nodes || true
+    echo "";
+}
+
+function remove_first_element()
+{
+  local list=("$@")
+  local rest_of_list=("${list[@]:1}")
+  echo "${rest_of_list[@]}"
+}
+
+function remove_last_element()
+{
+  local list=("$@")
+  local rest_of_list=("${list[@]:0:${#list[@]}-1}")
+  echo "${rest_of_list[@]}"
+}
+
+function store_join_command() {
+    joincommand=$(cat tasks.sh | sudo bash -s join_token $AIRGAP_FLAG ha)
+    secondaryJoin=$(echo $joincommand | grep -o -P '(?<=nodes:).*(?=To)' | xargs echo -n)
+    secondaryJoin=$(remove_first_element $secondaryJoin)
+    secondaryJoin=$(remove_last_element $secondaryJoin)
+    secondaryJoin=$(echo $secondaryJoin | base64 | tr -d '\n' )
+
+    primaryJoin=$(echo $joincommand | grep -o -P '(?<=nodes:).*(?=)') # return from secondary till the end
+    primaryJoin=$(echo $primaryJoin | grep -o -P '(?<=nodes:).*(?=)') # take the primary command only
+    primaryJoin=$(remove_first_element $primaryJoin)
+    primaryJoin=$(remove_last_element $primaryJoin)
+    primaryJoin=$(echo $primaryJoin | base64 | tr -d '\n' )
+
+    curl -X POST -d "{\"primaryJoin\": \"${primaryJoin}\",\"secondaryJoin\": \"${secondaryJoin}\"}" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/join-command"
+    local exit_status="$?"
+    if [ "$exit_status" -ne 0 ]; then
+        echo "failed to store join command with status $exit_status"
+        send_logs
+        report_failure "join_command"
+        report_status_update "failed"
+        exit 1
+    fi
 }
 
 function run_tasks_join_token() {
@@ -253,7 +280,7 @@ function disable_internet() {
     _regex="^[[:digit:]]+: ([^[:space:]]+)[[:space:]]+[[:alnum:]]+ ([[:digit:].]+)"
     while read -r _line; do
         [[ $_line =~ $_regex ]]
-        if [ "${BASH_REMATCH[1]}" != "lo" ] && [ "${BASH_REMATCH[1]}" != "kube-ipvs0" ] && [ "${BASH_REMATCH[1]}" != "docker0" ] && [ "${BASH_REMATCH[1]}" != "weave" ]; then
+        if [ "${BASH_REMATCH[1]}" != "lo" ] && [ "${BASH_REMATCH[1]}" != "kube-ipvs0" ] && [ "${BASH_REMATCH[1]}" != "docker0" ] && [ "${BASH_REMATCH[1]}" != "weave" ] && [ "${BASH_REMATCH[1]}" != "antrea-gw0" ]; then
             _iface_names[$((_count))]=${BASH_REMATCH[1]}
             _iface_addrs[$((_count))]=${BASH_REMATCH[2]}
             let "_count += 1"
@@ -282,6 +309,7 @@ function disable_internet() {
         traceroute www.google.com
         send_logs
         report_failure "airgap_instance"
+        report_status_update "failed"
         exit 1
     fi
 
@@ -311,6 +339,7 @@ function run_sonobuoy() {
         collect_debug_info_sonobuoy
         send_logs
         report_failure "sonobuoy_run"
+        report_status_update "failed"
         exit 1
     fi
 
@@ -329,6 +358,7 @@ function run_sonobuoy() {
         collect_debug_info_sonobuoy
         send_logs
         report_failure "sonobuoy_retrieve"
+        report_status_update "failed"
         exit 1
     fi
 }
@@ -347,11 +377,13 @@ function run_analyzers() {
         echo "failed troubleshoot analysis with errors"
         send_logs
         report_failure "troubleshoot_analysis"
+        report_status_update "failed"
         exit 1
     elif grep -q '"severity": "warn"' ./analyzer-results.json ; then
         echo "failed troubleshoot analysis with warnings"
         send_logs
         report_failure "troubleshoot_analysis"
+        report_status_update "failed"
         exit 1
     fi
 }
@@ -390,28 +422,70 @@ function report_failure() {
     curl -X POST -d "{\"success\": false, \"failureReason\": \"${failure}\"}" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/finish"
 }
 
-function send_logs() {
-    curl -X POST --data-binary "@/var/log/cloud-init-output.log" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/logs"
+function wait_for_cluster_ready() {
+    while true
+    do
+        ready_count=$(kubectl get nodes -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -o "True" | wc -l)
+        #later we will check the dynamic value of the number of nodes
+        if [ "$ready_count" -eq "$NUM_NODES" ]; then
+            echo "cluster is ready"
+            break
+        fi
+        echo "cluster is not ready"
+        i=$((i+1))
+        if [ $i -gt 20 ]; then
+            report_failure "cluster_not_ready"
+            exit 0
+        fi
+        sleep 60
+    done
+}
+
+function install_using_ha() {
+    if [ "$NUM_PRIMARY_NODES" -gt 1 ]; then
+        echo "kurl install finished with ha"
+        cat install.sh | timeout 30m bash -s $AIRGAP_FLAG ${KURL_FLAGS[@]} ha
+        KURL_EXIT_STATUS=$?
+    fi
+}
+
+function check_command_run_success() {
+    if [ $KURL_EXIT_STATUS -ne 0 ]; then
+        echo "kurl install failed"
+        report_failure "kurl_install"
+        report_status_update "failed"
+        collect_support_bundle
+        send_logs
+        exit 1
+    fi
+}
+
+# change flags from string to array with space as delimiter
+function create_flags_array() {
+    IFS=' ' read -r -a KURL_FLAGS <<< "${KURL_FLAGS}"
 }
 
 function main() {
+    
     curl -X POST "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/running"
-
     setup_runner
+ 
+    report_status_update "running"
 
+    create_flags_array
     run_install
+    check_command_run_success
     send_logs
-
-    if [ $KURL_EXIT_STATUS -ne 0 ]; then
-        send_logs
-        report_failure "kurl_install"
-        collect_support_bundle
-        exit 1
-    fi
-
+    install_using_ha
+    check_command_run_success
+    send_logs
     run_post_install_script
 
     run_tasks_join_token
+    store_join_command
+    send_logs
+    report_status_update "joinCommandStored"
+    wait_for_cluster_ready
 
     if [ "$KURL_UPGRADE_URL" != "" ]; then
         run_upgrade
@@ -421,6 +495,7 @@ function main() {
     if [ $KURL_EXIT_STATUS -ne 0 ]; then
         send_logs
         report_failure "kurl_upgrade"
+        report_status_update "failed"
         collect_support_bundle
         exit 1
     fi
@@ -441,6 +516,7 @@ function main() {
     run_analyzers
 
     send_logs
+    report_status_update "success" # used to update the initialprimary node in the clusernode table
     report_success "$failureReason"
     exit 0
 }
