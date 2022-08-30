@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	tghandlers "github.com/replicatedhq/kurl/testgrid/tgapi/pkg/handlers"
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner/helpers"
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner/types"
+	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/helpers"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

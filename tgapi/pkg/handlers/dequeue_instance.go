@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testinstance"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testinstance"
 )
 
 type DequeueInstanceResponse struct {

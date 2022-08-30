@@ -3,7 +3,7 @@ package run
 import (
 	"fmt"
 
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner"
 	"github.com/spf13/cobra"
 )
 

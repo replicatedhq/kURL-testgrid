@@ -9,9 +9,9 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	tghandlers "github.com/replicatedhq/kurl/testgrid/tgapi/pkg/handlers"
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner/helpers"
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner/types"
+	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/helpers"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubevirtv1 "kubevirt.io/api/core/v1"
 )

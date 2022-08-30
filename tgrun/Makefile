@@ -1,29 +1,32 @@
 SHELL := /bin/bash
 
-export GO111MODULE=on
+.PHONY: all
+all: fmt vet test build
 
-.PHONY: modules
-modules:
-	go mod download
+.PHONY: fmt
+fmt:
+	go fmt ./...
+
+.PHONY: lint
+lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	golangci-lint run --enable-all ./...
+
+.PHONY: vet
+vet:
+	go vet ./...
 
 .PHONY: test
 test:
 	go test -v ./...
 
 .PHONY: build
-build: fmt vet build-cli
-
-.PHONY: build-cli
-build-cli:
+build:
 	mkdir -p bin
 	go build \
 		-o ./bin/tgrun \
 		./cmd/run
 
-.PHONY: fmt
-fmt:
-	go fmt ./...
-
-.PHONY: vet
-vet:
-	go vet ./...
+.PHONY: run
+run:
+	./bin/tgrun

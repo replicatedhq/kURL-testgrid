@@ -1,6 +1,6 @@
 name: tgapi
 command: bash
-workdir: /go/src/github.com/replicatedhq/kurl/testgrid/tgapi
+workdir: /go/src/github.com/replicatedhq/kurl-testgrid/tgapi
 sync:
   - ../../:/go/src/github.com/replicatedhq/kurl
 resources:

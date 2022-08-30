@@ -9,11 +9,11 @@ import (
 
 	ghandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/handlers"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/metrics"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/middleware"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/persistence"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/version"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/metrics"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/middleware"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/persistence"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

@@ -1,8 +1,8 @@
 package run
 
 import (
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/scheduler"
-	schedulertypes "github.com/replicatedhq/kurl/testgrid/tgrun/pkg/scheduler/types"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/scheduler"
+	schedulertypes "github.com/replicatedhq/kurl-testgrid/tgrun/pkg/scheduler/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

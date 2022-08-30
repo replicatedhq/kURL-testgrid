@@ -1,0 +1,78 @@
+name: build-test
+
+on: [ pull_request ]
+
+jobs:
+
+  validate-go-mod:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - name: setup env
+        run: |
+          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - uses: actions/checkout@v3
+
+      - run: go mod tidy
+
+  build-tgapi:
+    runs-on: ubuntu-20.04
+    needs: validate-go-mod
+    steps:
+    - uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+    - name: setup env
+      run: |
+        echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+      shell: bash
+
+    - uses: actions/checkout@v3
+
+    - run: make -C tgapi test build
+
+  build-tgrun:
+    runs-on: ubuntu-20.04
+    needs: validate-go-mod
+    steps:
+    - uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+    - name: setup env
+      run: |
+        echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+      shell: bash
+
+    - uses: actions/checkout@v3
+
+    - run: make -C tgrun test build
+
+  build-web:
+    runs-on: ubuntu-20.04
+    needs: validate-go-mod
+    steps:
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '14'
+
+    - uses: actions/checkout@v3
+
+    - run: make -C web deps build-staging
+
+  build-test-success:
+    runs-on: ubuntu-latest
+    needs:
+    - validate-go-mod
+    - build-tgapi
+    - build-tgrun
+    - build-web
+    steps:
+    - run: echo "::notice ::build test success"

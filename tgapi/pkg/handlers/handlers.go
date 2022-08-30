@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/logger"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/logger"
 )
 
 type Handlers struct {

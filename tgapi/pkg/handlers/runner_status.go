@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/logger"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/persistence"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/logger"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/persistence"
 	"go.uber.org/zap"
 )
 

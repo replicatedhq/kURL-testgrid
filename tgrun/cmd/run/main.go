@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/cli/run"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/cli/run"
 )
 
 func main() {

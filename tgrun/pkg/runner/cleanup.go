@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner/helpers"
-	runnerVmi "github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner/vmi"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/helpers"
+	runnerVmi "github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/vmi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	kubevirtv1 "kubevirt.io/api/core/v1"

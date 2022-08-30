@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/logger"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testinstance"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testrun"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/logger"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testinstance"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testrun"
 	"go.uber.org/zap"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testinstance"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testinstance"
 )
 
 type HealthzResponse struct {

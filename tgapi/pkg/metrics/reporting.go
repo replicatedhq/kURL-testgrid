@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/persistence"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testinstance"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/persistence"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testinstance"
 )
 
 func PollTestStats() {

@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/persistence"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testinstance/types"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/persistence"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testinstance/types"
 	yaml "gopkg.in/yaml.v2"
 )
 

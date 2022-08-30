@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testinstance"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testinstance"
 )
 
 // SkipInstances will skip all instances by ref ID. Instances will show up in the UI as "Skipped".
