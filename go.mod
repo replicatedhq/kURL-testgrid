@@ -9,7 +9,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.6
 	github.com/pkg/errors v0.9.1
-	github.com/replicatedhq/kurl/kurlkinds v0.0.0-20220830175731-52ed6bee5833
+	github.com/replicatedhq/kurl/kurlkinds v0.0.0-20220830194906-eeba5fdbdaa9
 	github.com/replicatedhq/troubleshoot v0.40.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
