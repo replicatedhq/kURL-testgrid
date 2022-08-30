@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	tghandlers "github.com/replicatedhq/kurl/testgrid/tgapi/pkg/handlers"
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner/types"
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner/vmi"
+	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/types"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/vmi"
 )
 
 func Run(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {

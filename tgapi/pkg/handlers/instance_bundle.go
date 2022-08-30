@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/logger"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/persistence"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/logger"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/persistence"
 )
 
 func InstanceBundle(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/cli/api"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/cli/api"
 )
 
 func main() {

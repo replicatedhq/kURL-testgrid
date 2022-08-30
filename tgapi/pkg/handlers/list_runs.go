@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/logger"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testrun"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testrun/types"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/logger"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testrun"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testrun/types"
 )
 
 type ListRunsResponse struct {

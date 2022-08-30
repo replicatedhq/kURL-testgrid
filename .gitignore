@@ -1,0 +1,15 @@
+.idea
+*DS_Store
+.envrc
+.github/workflows/payloads
+
+*.key
+*.spdx
+*.swp
+sbom/
+
+
+# ide 
+.vscode
+
+node_modules

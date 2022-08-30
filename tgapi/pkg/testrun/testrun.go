@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/persistence"
-	"github.com/replicatedhq/kurl/testgrid/tgapi/pkg/testrun/types"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/persistence"
+	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testrun/types"
 )
 
 func TryGet(id string) (*types.TestRun, error) {

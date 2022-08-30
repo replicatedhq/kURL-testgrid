@@ -3,9 +3,9 @@ package run
 import (
 	"fmt"
 
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner"
-	runnertypes "github.com/replicatedhq/kurl/testgrid/tgrun/pkg/runner/types"
-	"github.com/replicatedhq/kurl/testgrid/tgrun/pkg/version"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner"
+	runnertypes "github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/types"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
