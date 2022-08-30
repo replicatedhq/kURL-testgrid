@@ -3,6 +3,7 @@ FROM golang:1.19-alpine AS builder
 
 RUN apk update && apk add --no-cache git ca-certificates && update-ca-certificates
 
+ADD go.* /go/src/github.com/replicatedhq/kurl-testgrid/
 ADD tgapi /go/src/github.com/replicatedhq/kurl-testgrid/tgapi
 ADD tgrun /go/src/github.com/replicatedhq/kurl-testgrid/tgrun
 

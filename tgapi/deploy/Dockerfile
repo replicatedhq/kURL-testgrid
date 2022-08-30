@@ -1,5 +1,6 @@
 FROM golang:1.19
 
+ADD go.* /go/src/github.com/replicatedhq/kurl-testgrid/
 ADD tgapi /go/src/github.com/replicatedhq/kurl-testgrid/tgapi
 ADD tgrun /go/src/github.com/replicatedhq/kurl-testgrid/tgrun
 WORKDIR /go/src/github.com/replicatedhq/kurl-testgrid/tgapi
