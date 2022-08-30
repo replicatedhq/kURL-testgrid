@@ -20,8 +20,8 @@ jobs:
     - uses: docker/login-action@v2
       with:
         registry: 923411875752.dkr.ecr.us-east-1.amazonaws.com
-        username: ${{ secrets.STAGING_ECR_AWS_ACCESS_KEY_ID }}
-        password: ${{ secrets.STAGING_ECR_AWS_SECRET_ACCESS_KEY }}
+        username: ${{ secrets.STAGING_ECR_AWS_ACCESS_KEY_ID_SELECT }}
+        password: ${{ secrets.STAGING_ECR_AWS_SECRET_ACCESS_KEY_SELECT }}
 
     - run: docker push 923411875752.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7}
 
@@ -47,10 +47,10 @@ jobs:
 
     - name: ssh-key
       env:
-        GITOPS_DEPLOY_TOKEN: ${{ secrets.GITOPS_DEPLOY_TOKEN }}
+        GITOPS_DEPLOY_KEY: ${{ secrets.GITOPS_DEPLOY_KEY }}
       run: |
         mkdir -p ~/.ssh
-        echo "$GITOPS_DEPLOY_TOKEN" > ~/.ssh/id_rsa
+        echo "$GITOPS_DEPLOY_KEY" > ~/.ssh/id_rsa
         chmod 400 ~/.ssh/id_rsa
         echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' \
           >> ~/.ssh/known_hosts
@@ -81,8 +81,8 @@ jobs:
     - uses: docker/login-action@v2
       with:
         registry: 799720048698.dkr.ecr.us-east-1.amazonaws.com
-        username: ${{ secrets.PRODUCTION_ECR_AWS_ACCESS_KEY_ID }}
-        password: ${{ secrets.PRODUCTION_ECR_AWS_SECRET_ACCESS_KEY }}
+        username: ${{ secrets.PRODUCTION_ECR_AWS_ACCESS_KEY_ID_SELECT }}
+        password: ${{ secrets.PRODUCTION_ECR_AWS_SECRET_ACCESS_KEY_SELECT }}
 
     - run: docker push 799720048698.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7}
 
@@ -128,10 +128,10 @@ jobs:
 
     - name: ssh-key
       env:
-        GITOPS_DEPLOY_TOKEN: ${{ secrets.GITOPS_DEPLOY_TOKEN }}
+        GITOPS_DEPLOY_KEY: ${{ secrets.GITOPS_DEPLOY_KEY }}
       run: |
         mkdir -p ~/.ssh
-        echo "$GITOPS_DEPLOY_TOKEN" > ~/.ssh/id_rsa
+        echo "$GITOPS_DEPLOY_KEY" > ~/.ssh/id_rsa
         chmod 400 ~/.ssh/id_rsa
         echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' \
           >> ~/.ssh/known_hosts
