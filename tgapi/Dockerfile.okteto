@@ -7,7 +7,7 @@ EXPOSE 2345
 
 ENV GOCACHE "/.cache/gocache/"
 ENV GOMODCACHE "/.cache/gomodcache/"
-ENV PROJECT_PATH=/go/src/github.com/replicatedhq/kurl
+ENV PROJECT_PATH=/go/src/github.com/replicatedhq/kurl-testgrid
 
 WORKDIR $PROJECT_PATH
 
@@ -20,7 +20,6 @@ COPY go.mod go.sum Makefile ./
 RUN --mount=target=$GOMODCACHE,id=kurl-gomodcache,type=cache go mod download
 
 ## Now add the project and compile
-COPY pkg pkg
 COPY tgapi tgapi
 COPY tgrun tgrun
 
