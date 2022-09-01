@@ -213,7 +213,7 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 		return errors.Wrap(err, "failed to report ref started")
 	}
 
-	fmt.Printf("Started tests on %d specs across %d images\n", len(kurlPlans), len(operatingSystems))
+	fmt.Printf("Started tests on %d specs across %d images with priority %d\n", len(kurlPlans), len(operatingSystems), schedulerOptions.Priority)
 
 	return nil
 }
