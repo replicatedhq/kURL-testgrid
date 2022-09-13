@@ -226,6 +226,7 @@ export NODE_ID='%s'
 
 	varsB64 := base64.StdEncoding.EncodeToString([]byte(varsSh))
 
+	preInstallB64 := base64.StdEncoding.EncodeToString([]byte(singleTest.PreInstallScript))
 	postInstallB64 := base64.StdEncoding.EncodeToString([]byte(singleTest.PostInstallScript))
 	postUpgradeB64 := base64.StdEncoding.EncodeToString([]byte(singleTest.PostUpgradeScript))
 
@@ -244,6 +245,7 @@ runcmd:
   - [ bash, -c, 'echo %s | base64 -d > /opt/kurl-testgrid/runcmd.sh' ]
   - [ bash, -c, 'echo %s | base64 -d > /opt/kurl-testgrid/mainscript.sh' ]
   - [ bash, -c, 'echo %s | base64 -d > /opt/kurl-testgrid/testhelpers.sh' ]
+  - [ bash, -c, '[ %d -eq 0 ] || echo %s | base64 -d > /opt/kurl-testgrid/preinstall.sh' ]
   - [ bash, -c, '[ %d -eq 0 ] || echo %s | base64 -d > /opt/kurl-testgrid/postinstall.sh' ]
   - [ bash, -c, '[ %d -eq 0 ] || echo %s | base64 -d > /opt/kurl-testgrid/postupgrade.sh' ]
   - [ bash, -c, 'sudo bash /opt/kurl-testgrid/preinit.sh' ]
@@ -260,6 +262,8 @@ power_state:
 		runcmdB64,
 		mainScriptB64,
 		testHelpersB64,
+		len(singleTest.PreInstallScript),
+		preInstallB64,
 		len(singleTest.PostInstallScript),
 		postInstallB64,
 		len(singleTest.PostUpgradeScript),

@@ -139,6 +139,24 @@ function run_upgrade() {
     send_logs
 }
 
+function run_pre_install_script() {
+    if [ ! -f /opt/kurl-testgrid/preinstall.sh ] ; then
+        return # file does not exist
+    fi
+
+    timeout 30m bash -euxo pipefail /opt/kurl-testgrid/preinstall.sh
+    local exit_status="$?"
+
+    send_logs
+
+    if [ "$exit_status" -ne 0 ]; then
+        report_failure "pre_install_script"
+        report_status_update "failed"
+        collect_support_bundle
+        exit 1
+    fi
+}
+
 function run_post_install_script() {
     if [ ! -f /opt/kurl-testgrid/postinstall.sh ] ; then
         return # file does not exist
@@ -510,6 +528,9 @@ function main() {
     report_status_update "running"
 
     create_flags_array
+
+    run_pre_install_script
+
     run_install
     
     if [ $KURL_EXIT_STATUS -ne 0 ]; then

@@ -15,7 +15,7 @@ import (
 )
 
 const testInstanceFields = `id, test_id, test_name, testrun_ref, kurl_yaml, kurl_url, kurl_flags, upgrade_yaml, ` +
-	`upgrade_url, num_primary_nodes, num_secondary_nodes, memory, cpu, supportbundle_yaml, post_install_script, ` +
+	`upgrade_url, num_primary_nodes, num_secondary_nodes, memory, cpu, supportbundle_yaml, pre_install_script, post_install_script, ` +
 	`post_upgrade_script, os_name, os_version, os_image, os_preinit, enqueued_at, dequeued_at, ` +
 	`started_at, finished_at, is_success, failure_reason, is_unsupported, is_skipped`
 
@@ -33,7 +33,7 @@ type KurlInstallerMetadata struct {
 	Name string `json:"name" yaml:"name"`
 }
 
-func Create(id, testID, testName string, priority int, refID, kurlYAML, kurlURL, kurlFlags, upgradeYAML, upgradeURL, supportbundleYAML, postInstallScript, postUpgradeScript, osName, osVersion, osImage, osPreInit string, numPrimaryNode int, numSecondaryNode int, memory string, cpu string) error {
+func Create(id, testID, testName string, priority int, refID, kurlYAML, kurlURL, kurlFlags, upgradeYAML, upgradeURL, supportbundleYAML, preInstallScript, postInstallScript, postUpgradeScript, osName, osVersion, osImage, osPreInit string, numPrimaryNode int, numSecondaryNode int, memory string, cpu string) error {
 	pg := persistence.MustGetPGSession()
 	if len(memory) == 0 {
 		memory = MemoryDefault
@@ -41,9 +41,9 @@ func Create(id, testID, testName string, priority int, refID, kurlYAML, kurlURL,
 	if len(cpu) == 0 {
 		cpu = CPUDefault
 	}
-	query := `insert into testinstance (id, test_id, test_name, priority, enqueued_at, testrun_ref, kurl_yaml, kurl_url, kurl_flags, upgrade_yaml, upgrade_url, supportbundle_yaml, post_install_script, post_upgrade_script, os_name, os_version, os_image, os_preinit, num_primary_nodes, num_secondary_nodes, memory, cpu)
+	query := `insert into testinstance (id, test_id, test_name, priority, enqueued_at, testrun_ref, kurl_yaml, kurl_url, kurl_flags, upgrade_yaml, upgrade_url, supportbundle_yaml, pre_install_script, post_install_script, post_upgrade_script, os_name, os_version, os_image, os_preinit, num_primary_nodes, num_secondary_nodes, memory, cpu)
 values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)`
-	if _, err := pg.Exec(query, id, testID, testName, priority, time.Now(), refID, kurlYAML, kurlURL, kurlFlags, upgradeYAML, upgradeURL, supportbundleYAML, postInstallScript, postUpgradeScript, osName, osVersion, osImage, osPreInit, numPrimaryNode, numSecondaryNode, memory, cpu); err != nil {
+	if _, err := pg.Exec(query, id, testID, testName, priority, time.Now(), refID, kurlYAML, kurlURL, kurlFlags, upgradeYAML, upgradeURL, supportbundleYAML, preInstallScript, postInstallScript, postUpgradeScript, osName, osVersion, osImage, osPreInit, numPrimaryNode, numSecondaryNode, memory, cpu); err != nil {
 		return errors.Wrap(err, "failed to insert")
 	}
 
@@ -258,7 +258,7 @@ func rowToTestInstance(row scannable) (types.TestInstance, error) {
 
 	var enqueuedAt, dequeuedAt, startedAt, finishedAt sql.NullTime
 	var isSuccess, isUnsupported, isSkipped sql.NullBool
-	var testID, testName, kurlFlags, upgradeYAML, upgradeURL, supportbundleYAML, postInstallScript, postUpgradeScript, failureReason, osPreInit, memory, cpu sql.NullString
+	var testID, testName, kurlFlags, upgradeYAML, upgradeURL, supportbundleYAML, preInstallScript, postInstallScript, postUpgradeScript, failureReason, osPreInit, memory, cpu sql.NullString
 	var numPrimaryNodes, numSecondaryNodes sql.NullInt64
 	if err := row.Scan(
 		&testInstance.ID,
@@ -275,6 +275,7 @@ func rowToTestInstance(row scannable) (types.TestInstance, error) {
 		&memory,
 		&cpu,
 		&supportbundleYAML,
+		&preInstallScript,
 		&postInstallScript,
 		&postUpgradeScript,
 		&testInstance.OSName,
@@ -316,6 +317,7 @@ func rowToTestInstance(row scannable) (types.TestInstance, error) {
 	testInstance.Memory = memory.String
 	testInstance.CPU = cpu.String
 	testInstance.SupportbundleYAML = supportbundleYAML.String
+	testInstance.PreInstallScript = preInstallScript.String
 	testInstance.PostInstallScript = postInstallScript.String
 	testInstance.PostUpgradeScript = postUpgradeScript.String
 	testInstance.OSPreInit = osPreInit.String
@@ -567,6 +569,7 @@ func getOrCreateTestID(instance types.TestInstance) string {
 			strconv.Itoa(instance.NumPrimaryNodes),
 			strconv.Itoa(instance.NumSecondaryNodes),
 			instance.KurlFlags,
+			instance.PreInstallScript,
 			instance.PostInstallScript,
 			instance.PostUpgradeScript,
 			instance.Memory,

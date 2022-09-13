@@ -34,6 +34,7 @@ const InstanceTable = (props) => {
   const [loadingSonobuoyResults, setLoadingSonobuoyResults] = useState(false);
   const [showUpgradeYaml, setShowUpgradeYaml] = useState(false);
   const [showSupportbundleYaml, setShowSupportbundleYaml] = useState(false);
+  const [showPreInstallScript, setShowPreInstallScript] = useState(false);
   const [showPostInstallScript, setShowPostInstallScript] = useState(false);
   const [showPostUpgradeScript, setShowPostUpgradeScript] = useState(false);
 
@@ -88,6 +89,7 @@ const InstanceTable = (props) => {
     setShowInstallerModal(true);
     setShowUpgradeYaml(false);
     setShowSupportbundleYaml(false);
+    setShowPreInstallScript(false);
     setShowPostInstallScript(false);
     setShowPostUpgradeScript(false);
   }
@@ -100,6 +102,11 @@ const InstanceTable = (props) => {
   const viewSupportbundleYaml = instance => {
     viewInstanceInstaller(instance);
     setShowSupportbundleYaml(true);
+  }
+
+  const viewPreInstallScript = instance => {
+    viewInstanceInstaller(instance);
+    setShowPreInstallScript(true);
   }
 
   const viewPostInstallScript = instance => {
@@ -322,6 +329,12 @@ const InstanceTable = (props) => {
               <span className="url" onClick={() => viewSupportbundleYaml(testInstance[0])}>Support Bundle YAML</span>
             </div>
             }
+          {testInstance[0].preInstallScript &&
+            <div>
+              <br/>
+              <span className="url" onClick={() => viewPreInstallScript(testInstance[0])}>Pre-Install Script</span>
+            </div>
+          }
           {testInstance[0].postInstallScript &&
             <div>
               <br/>
@@ -390,6 +403,8 @@ const InstanceTable = (props) => {
     editorContent = prettifyJSON(selectedInstance?.upgradeYaml)
   } else if (showSupportbundleYaml) {
     editorContent = prettifyJSON(selectedInstance?.supportbundleYaml);
+  } else if (showPreInstallScript) {
+    editorContent = selectedInstance?.preInstallScript;
   } else if (showPostInstallScript) {
     editorContent = selectedInstance?.postInstallScript;
   } else if (showPostUpgradeScript) {

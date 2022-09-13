@@ -39,6 +39,7 @@ type PlannedInstance struct {
 
 	SupportbundleYAML string
 
+	PreInstallScript  string
 	PostInstallScript string
 	PostUpgradeScript string
 
@@ -102,6 +103,7 @@ func StartRef(w http.ResponseWriter, r *http.Request) {
 			plannedInstance.UpgradeYAML,
 			plannedInstance.UpgradeURL,
 			plannedInstance.SupportbundleYAML,
+			plannedInstance.PreInstallScript,
 			plannedInstance.PostInstallScript,
 			plannedInstance.PostUpgradeScript,
 			plannedInstance.OperatingSystemName,

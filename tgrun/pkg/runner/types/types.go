@@ -24,6 +24,7 @@ type SingleRun struct {
 	KurlFlags         string
 	UpgradeURL        string
 	SupportbundleYAML string
+	PreInstallScript  string
 	PostInstallScript string
 	PostUpgradeScript string
 	KurlRef           string
