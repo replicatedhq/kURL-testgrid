@@ -42,7 +42,7 @@ func Create(id, testID, testName string, priority int, refID, kurlYAML, kurlURL,
 		cpu = CPUDefault
 	}
 	query := `insert into testinstance (id, test_id, test_name, priority, enqueued_at, testrun_ref, kurl_yaml, kurl_url, kurl_flags, upgrade_yaml, upgrade_url, supportbundle_yaml, pre_install_script, post_install_script, post_upgrade_script, os_name, os_version, os_image, os_preinit, num_primary_nodes, num_secondary_nodes, memory, cpu)
-values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)`
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`
 	if _, err := pg.Exec(query, id, testID, testName, priority, time.Now(), refID, kurlYAML, kurlURL, kurlFlags, upgradeYAML, upgradeURL, supportbundleYAML, preInstallScript, postInstallScript, postUpgradeScript, osName, osVersion, osImage, osPreInit, numPrimaryNode, numSecondaryNode, memory, cpu); err != nil {
 		return errors.Wrap(err, "failed to insert")
 	}
