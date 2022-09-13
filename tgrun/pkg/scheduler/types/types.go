@@ -48,6 +48,7 @@ type Instance struct {
 	Flags             string                             `json:"flags,omitempty" yaml:"flags,omitempty"`
 	UpgradeSpec       *kurlv1beta1.InstallerSpec         `json:"upgradeSpec,omitempty" yaml:"upgradeSpec,omitempty"`
 	SupportbundleSpec *troubleshootv1beta2.SupportBundle `json:"supportbundleSpec,omitempty" yaml:"supportbundleSpec,omitempty"`
+	PreInstallScript  string                             `json:"preInstallScript,omitempty" yaml:"preInstallScript,omitempty"`
 	PostInstallScript string                             `json:"postInstallScript,omitempty" yaml:"postInstallScript,omitempty"`
 	PostUpgradeScript string                             `json:"postUpgradeScript,omitempty" yaml:"postUpgradeScript,omitempty"`
 	Airgap            bool                               `json:"airgap,omitempty" yaml:"airgap,omitempty"`

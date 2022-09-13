@@ -29,6 +29,7 @@ type TestInstance struct {
 	CPU               string `json:"cpu"`
 
 	SupportbundleYAML string `json:"supportbundleYaml"`
+	PreInstallScript  string `json:"preInstallScript"`
 	PostInstallScript string `json:"postInstallScript"`
 	PostUpgradeScript string `json:"postUpgradeScript"`
 
