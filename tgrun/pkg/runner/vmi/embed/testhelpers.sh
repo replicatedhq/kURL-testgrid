@@ -140,3 +140,17 @@ function validate_read_write_object_store() {
 
     validate_testfile "$bucket" "$file"
 }
+
+# validate rook operator version
+function validate_rook_version() {
+    expected_rook_version=$1
+    actual_rook_version=$(kubectl -n rook-ceph get deploy rook-ceph-operator -oyaml 2>/dev/null \
+        | grep ' image: ' \
+        | awk -F':' 'NR==1 { print $3 }' \
+        | sed 's/v\([^-]*\).*/\1/'
+    )
+    if [[ "$actual_rook_version" != "$expected_rook_version" ]]; then
+        echo "failed to validate rook version: expected $expected_rook_version but got $actual_rook_version"
+        return 1
+    fi
+}
