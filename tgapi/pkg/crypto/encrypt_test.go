@@ -1,9 +1,7 @@
 package crypto
 
 import (
-	"bytes"
 	"io"
-	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -25,33 +23,31 @@ func TestEncrypt(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name:      "basic",
+			name:      "short",
 			plainText: "testing a secret message",
+		},
+		{
+			name:      "long",
+			plainText: strings.Repeat("testing a secret message", 10000),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			buf := bytes.NewBuffer(nil)
-			encrypter, err := Encrypt(passphrase, buf)
+			enc, err := StreamEncrypt(passphrase, strings.NewReader(tt.plainText))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Encrypt() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			_, err = io.Copy(encrypter, strings.NewReader(tt.plainText))
-			encrypter.Close()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("encript plain text error = %v", err)
-				return
-			}
 
-			r, err := age.Decrypt(bytes.NewReader(buf.Bytes()), identity)
+			r, err := age.Decrypt(enc, identity)
 			if err != nil {
 				t.Errorf("age.Decrypt() error = %v", err)
 				return
 			}
-			dec, err := ioutil.ReadAll(r)
+			dec, err := io.ReadAll(r)
+			enc.Close()
 			if err != nil {
-				t.Errorf("ioutil.ReadAll() error = %v", err)
+				t.Errorf("io.ReadAll() error = %v", err)
 				return
 			}
 			if string(dec) != tt.plainText {
