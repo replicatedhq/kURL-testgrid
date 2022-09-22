@@ -34,7 +34,7 @@ func InstanceBundle(passpharse string) func(http.ResponseWriter, *http.Request) 
 		}
 		defer encrypted.Close()
 
-		key := fmt.Sprintf("%s-%d/bundle.tgz", instanceID, time.Now().Unix())
+		key := fmt.Sprintf("%s-%d/bundle.tgz.age", instanceID, time.Now().Unix())
 		input := &s3manager.UploadInput{
 			Body:   aws.ReadSeekCloser(encrypted),
 			Bucket: aws.String(bucket),
