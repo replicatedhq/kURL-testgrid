@@ -147,14 +147,15 @@ function run_pre_install_script() {
     timeout 30m bash -euxo pipefail /opt/kurl-testgrid/preinstall.sh
     local exit_status="$?"
 
-    send_logs
-
     if [ "$exit_status" -ne 0 ]; then
         report_failure "pre_install_script"
         report_status_update "failed"
         collect_support_bundle
+        send_logs
         exit 1
     fi
+
+    send_logs
 }
 
 function run_post_install_script() {
@@ -165,14 +166,15 @@ function run_post_install_script() {
     timeout 30m bash -euxo pipefail /opt/kurl-testgrid/postinstall.sh
     local exit_status="$?"
 
-    send_logs
-
     if [ "$exit_status" -ne 0 ]; then
         report_failure "post_install_script"
         report_status_update "failed"
         collect_support_bundle
+        send_logs
         exit 1
     fi
+
+    send_logs
 }
 
 function run_post_upgrade_script() {
@@ -183,14 +185,15 @@ function run_post_upgrade_script() {
     timeout 30m bash -euxo pipefail /opt/kurl-testgrid/postupgrade.sh
     local exit_status="$?"
 
-    send_logs
-
     if [ "$exit_status" -ne 0 ]; then
         report_failure "post_upgrade_script"
         report_status_update "failed"
         collect_support_bundle
+        send_logs
         exit 1
     fi
+
+    send_logs
 }
 
 function collect_debug_info_after_kurl() {
@@ -505,10 +508,10 @@ function wait_for_cluster_ready() {
         echo "cluster is not ready"
         i=$((i+1))
         if [ $i -gt 20 ]; then
-            send_logs
             report_failure "cluster_not_ready"
             report_status_update "failed"
             collect_support_bundle
+            send_logs
             exit 1
         fi
         sleep 60
@@ -535,10 +538,10 @@ function main() {
     
     if [ $KURL_EXIT_STATUS -ne 0 ]; then
         echo "kurl install failed"
-        send_logs
         report_failure "kurl_install"
         report_status_update "failed"
         collect_support_bundle
+        send_logs
         exit 1
     fi
 
@@ -559,10 +562,10 @@ function main() {
 
         if [ $KURL_EXIT_STATUS -ne 0 ]; then
             echo "kurl upgrade failed"
-            send_logs
             report_failure "kurl_upgrade"
             report_status_update "failed"
             collect_support_bundle
+            send_logs
             exit 1
         fi
 
