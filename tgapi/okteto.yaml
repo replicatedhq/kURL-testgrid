@@ -2,7 +2,7 @@ name: tgapi
 command: bash
 workdir: /go/src/github.com/replicatedhq/kurl-testgrid/tgapi
 sync:
-  - ../../:/go/src/github.com/replicatedhq/kurl
+  - ../:/go/src/github.com/replicatedhq/kurl-testgrid
 resources:
   limits:
     cpu: "2"
