@@ -577,7 +577,8 @@ function main() {
         failureReason="airgap_violation"
     fi
 
-    collect_support_bundle
+    # no longer collect support bundles for successful runs
+    # collect_support_bundle
 
     run_sonobuoy
 
