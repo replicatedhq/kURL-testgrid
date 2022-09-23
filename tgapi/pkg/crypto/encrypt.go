@@ -12,6 +12,7 @@ func StreamEncrypt(password string, plaintext io.Reader) (io.ReadCloser, error) 
 	if err != nil {
 		return nil, err
 	}
+	recipient.SetWorkFactor(15)
 
 	pr, pw := io.Pipe()
 	bw := bufio.NewWriter(pw) // buffer age header and nonce

@@ -33,3 +33,5 @@ spec:
                   key: uri
             - name: SUPPORT_BUNDLE_BUCKET
               value: "testgrid-bundles-production"
+            - name: GOMEMLIMIT
+              value: 500MiB
