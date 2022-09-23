@@ -1,31 +1,21 @@
 package crypto
 
 import (
-	"bufio"
 	"io"
 
 	"filippo.io/age"
 )
 
-func StreamEncrypt(password string, plaintext io.Reader) (io.ReadCloser, error) {
-	recipient, err := age.NewScryptRecipient(password)
+func Encrypt(passphrase string, dst io.Writer) (io.WriteCloser, error) {
+	recipient, err := age.NewScryptRecipient(passphrase)
 	if err != nil {
 		return nil, err
 	}
 
-	pr, pw := io.Pipe()
-	bw := bufio.NewWriter(pw) // buffer age header and nonce
-	encrypter, err := age.Encrypt(bw, recipient)
+	encrypter, err := age.Encrypt(dst, recipient)
 	if err != nil {
 		return nil, err
 	}
 
-	go func() {
-		_, err := io.Copy(encrypter, plaintext)
-		encrypter.Close()
-		bw.Flush()
-		pw.CloseWithError(err)
-	}()
-
-	return pr, nil
+	return encrypter, nil
 }
