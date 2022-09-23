@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -27,8 +26,6 @@ func RunCmd() *cobra.Command {
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rand.Seed(time.Now().UnixNano())
-
 			rRoot := mux.NewRouter()
 			rRoot.Use(mux.CORSMethodMiddleware(rRoot))
 
@@ -62,7 +59,7 @@ func RunCmd() *cobra.Command {
 			r.HandleFunc("/v1/instance/{nodeId}/node-status", handlers.GetNodeStatus).Methods("GET")
 
 			r.HandleFunc("/v1/instance/{instanceId}/logs", handlers.InstanceLogs).Methods("POST")
-			r.HandleFunc("/v1/instance/{instanceId}/bundle", handlers.InstanceBundle(viper.GetString("instance-bundle-encryption-passphrase"))).Methods("POST")
+			r.HandleFunc("/v1/instance/{instanceId}/bundle", handlers.InstanceBundle).Methods("POST")
 			r.HandleFunc("/v1/instance/{instanceId}/sonobuoy", handlers.InstanceSonobuoyResults).Methods("POST")
 
 			r.HandleFunc("/v1/dequeue/instance", handlers.DequeueInstance).Methods("GET")

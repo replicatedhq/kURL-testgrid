@@ -2,5 +2,6 @@ bases:
   - ../../base
 
 resources:
+  - ./uri-secret.yaml
   - ./testgrid-postgres.yaml
 
