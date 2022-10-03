@@ -685,8 +685,8 @@ github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40T
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/replicatedhq/kurl/kurlkinds v0.0.0-20220830194906-eeba5fdbdaa9 h1:7HxZa+OnZAzvq5lgvw104spoTSjUn/egB2eoUIIIE9w=
 github.com/replicatedhq/kurl/kurlkinds v0.0.0-20220830194906-eeba5fdbdaa9/go.mod h1:TQZPUp/ft5IpK9l3aNke2uRj6DUNlh1HzH+11TuUF8Y=
-github.com/replicatedhq/troubleshoot v0.42.0 h1:glZfCpn8TPevQoS6c0kWJAfIeoXXVyYt5JjfleVjyCI=
-github.com/replicatedhq/troubleshoot v0.42.0/go.mod h1:3860sUP5sGo8wWl2VX9yiofzYE5i09Rbt61GPokz3M0=
+github.com/replicatedhq/troubleshoot v0.43.1 h1:MCixOdXrblHc6maqA6HYhtkTcyZZd0nx6CnnzkJqBXI=
+github.com/replicatedhq/troubleshoot v0.43.1/go.mod h1:0y2a6E9iSJibvhFGO8YIOwpK7kWtVu6/ZlKO8GjnAlM=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
