@@ -20,7 +20,7 @@ require (
 	k8s.io/api v0.25.2
 	k8s.io/apimachinery v0.25.2
 	k8s.io/client-go v0.25.2
-	kubevirt.io/api v0.57.1
+	kubevirt.io/api v0.58.0
 	kubevirt.io/client-go v0.57.1
 )
 
