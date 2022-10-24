@@ -10,16 +10,16 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.7
 	github.com/pkg/errors v0.9.1
-	github.com/replicatedhq/kurl/kurlkinds v0.0.0-20220830194906-eeba5fdbdaa9
+	github.com/replicatedhq/kurl/kurlkinds v0.0.0-20221024180039-6f1299402ede
 	github.com/replicatedhq/troubleshoot v0.45.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/zap v1.23.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.25.2
-	k8s.io/apimachinery v0.25.2
-	k8s.io/client-go v0.25.2
+	k8s.io/api v0.25.3
+	k8s.io/apimachinery v0.25.3
+	k8s.io/client-go v0.25.3
 	kubevirt.io/api v0.58.0
 	kubevirt.io/client-go v0.58.0
 )
@@ -79,7 +79,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.25.0 // indirect
+	k8s.io/apiextensions-apiserver v0.25.2 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed // indirect
