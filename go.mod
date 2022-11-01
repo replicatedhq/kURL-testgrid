@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/replicatedhq/kurl/kurlkinds v0.0.0-20221024180039-6f1299402ede
 	github.com/replicatedhq/troubleshoot v0.45.0
-	github.com/spf13/cobra v1.6.0
+	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.1
 	go.uber.org/zap v1.23.0
