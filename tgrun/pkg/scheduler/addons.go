@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	kurlv1beta1 "github.com/replicatedhq/kurl/kurlkinds/pkg/apis/cluster/v1beta1"
+	kurlv1beta1 "github.com/replicatedhq/kurlkinds/pkg/apis/cluster/v1beta1"
 )
 
 func generateAllAddOns() ([]kurlv1beta1.InstallerSpec, error) {

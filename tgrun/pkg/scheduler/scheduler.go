@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/scheduler/types"
-	kurlv1beta1 "github.com/replicatedhq/kurl/kurlkinds/pkg/apis/cluster/v1beta1"
+	kurlv1beta1 "github.com/replicatedhq/kurlkinds/pkg/apis/cluster/v1beta1"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -236,25 +236,6 @@ func getKurlPlans(spec string) ([]types.Instance, error) {
 	err := yaml.Unmarshal([]byte(spec), &kurlPlans)
 	if err != nil {
 		return nil, err
-	}
-
-	for idx := range kurlPlans {
-		// ensure that installerSpec has a k8s and CRI version specified
-		installerSpec := kurlPlans[idx].InstallerSpec
-		isDistroDefined := (installerSpec.Kubernetes != nil && installerSpec.Kubernetes.Version != "") ||
-			(installerSpec.RKE2 != nil && installerSpec.RKE2.Version != "") ||
-			(installerSpec.K3S != nil && installerSpec.K3S.Version != "")
-		if !isDistroDefined {
-			installerSpec.Kubernetes = &kurlv1beta1.Kubernetes{Version: "latest"}
-		}
-
-		isDistroRancher := (installerSpec.RKE2 != nil && installerSpec.RKE2.Version != "") ||
-			(installerSpec.K3S != nil && installerSpec.K3S.Version != "")
-		if !isDistroRancher &&
-			(installerSpec.Docker == nil || installerSpec.Docker.Version == "") &&
-			(installerSpec.Containerd == nil || installerSpec.Containerd.Version == "") {
-			installerSpec.Docker = &kurlv1beta1.Docker{Version: "latest"}
-		}
 	}
 
 	return kurlPlans, nil
