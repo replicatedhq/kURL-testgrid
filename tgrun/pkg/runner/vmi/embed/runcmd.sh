@@ -53,27 +53,6 @@ function run_install() {
     export KUBECONFIG=/etc/kubernetes/admin.conf
     export PATH=$PATH:/usr/local/bin
 
-    # rke2
-    export PATH=$PATH:/var/lib/rancher/rke2/bin
-    if [ -f /etc/rancher/rke2/rke2.yaml ]; then
-        export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-        # On testgrid the hostname doesn't resolve, so configure the apiserver to connect to kubelet
-        # by IP. Otherwise sonobuoy retrieve will fail execing into the sonobuoy pod. Kubeadm does
-        # this by default.
-        sed -i '/kubelet-client-key/a\    - --kubelet-preferred-address-types=InternalIP' /var/lib/rancher/rke2/agent/pod-manifests/kube-apiserver.yaml
-    fi
-    if [ -f /var/lib/rancher/rke2/agent/etc/crictl.yaml ]; then
-        export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
-    fi
-
-    # k3s
-    if [ -f /etc/rancher/k3s/k3s.yaml ]; then
-        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-    fi
-    if [ -f /var/lib/rancher/k3s/agent/etc/crictl.yaml ]; then
-        export CRI_CONFIG_FILE=/var/lib/rancher/k3s/agent/etc/crictl.yaml
-    fi
-
     if [ "$KURL_EXIT_STATUS" -eq 0 ]; then
         echo ""
         echo "completed kurl install"
@@ -284,7 +263,6 @@ function store_join_command() {
 }
 
 function run_tasks_join_token() {
-    # TODO: rke2 and k3s
     if command_exists "kubeadm" ; then
         echo "tasks.sh run:"
         cat tasks.sh | timeout 5m bash -s join_token $AIRGAP_FLAG
