@@ -11,15 +11,15 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/pkg/errors v0.9.1
 	github.com/replicatedhq/kurlkinds v1.0.7
-	github.com/replicatedhq/troubleshoot v0.45.0
+	github.com/replicatedhq/troubleshoot v0.49.1
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
 	go.uber.org/zap v1.23.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.25.3
-	k8s.io/apimachinery v0.25.3
-	k8s.io/client-go v0.25.3
+	k8s.io/api v0.25.4
+	k8s.io/apimachinery v0.25.4
+	k8s.io/client-go v0.25.4
 	kubevirt.io/api v0.58.0
 	kubevirt.io/client-go v0.58.0
 )
