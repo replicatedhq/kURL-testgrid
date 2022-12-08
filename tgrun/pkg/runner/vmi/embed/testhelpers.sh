@@ -82,6 +82,14 @@ function object_store_get_object() {
   "http://$OBJECT_STORE_CLUSTER_IP$resource"
 }
 
+# dump_longhorn_logs prints the logs of all pods in the longhorn-system namespace.
+function dump_longhorn_logs() {
+    for pod in $(kubectl get pods --no-headers -n longhorn-system -o custom-columns=:.metadata.name); do
+        echo "logs for longhorn-system/$pod"
+        kubectl logs -n longhorn-system "$pod"
+    done
+}
+
 function rook_ecph_object_store_info() {
     export OBJECT_STORE_ACCESS_KEY=$(kubectl -n rook-ceph get secret rook-ceph-object-user-rook-ceph-store-kurl -o yaml | grep AccessKey | head -1 | awk '{print $2}' | base64 --decode)
     export OBJECT_STORE_SECRET_KEY=$(kubectl -n rook-ceph get secret rook-ceph-object-user-rook-ceph-store-kurl -o yaml | grep SecretKey | head -1 | awk '{print $2}' | base64 --decode)
