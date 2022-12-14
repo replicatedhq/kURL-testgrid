@@ -97,10 +97,9 @@ function rook_ceph_object_store_info() {
     export OBJECT_STORE_CLUSTER_IP=$(kubectl -n rook-ceph get service rook-ceph-rgw-rook-ceph-store | tail -n1 | awk '{ print $3}')
 }
 
+# TODO: remove rook_ecph_object_store_info once we have removed from github.com/replicatedhq/kURL
 function rook_ecph_object_store_info() {
-    export OBJECT_STORE_ACCESS_KEY=$(kubectl -n rook-ceph get secret rook-ceph-object-user-rook-ceph-store-kurl -o yaml | grep AccessKey | head -1 | awk '{print $2}' | base64 --decode)
-    export OBJECT_STORE_SECRET_KEY=$(kubectl -n rook-ceph get secret rook-ceph-object-user-rook-ceph-store-kurl -o yaml | grep SecretKey | head -1 | awk '{print $2}' | base64 --decode)
-    export OBJECT_STORE_CLUSTER_IP=$(kubectl -n rook-ceph get service rook-ceph-rgw-rook-ceph-store | tail -n1 | awk '{ print $3}')
+    rook_ceph_object_store_info
 }
 
 function minio_object_store_info() {
@@ -156,7 +155,7 @@ function validate_read_write_object_store() {
     validate_testfile "$bucket" "$file"
 }
 
-# wait_for_minio_ready waits for minio pod to be running and ready
+# wait_for_minio_ready waits up to 20s for the minio pod to be running and ready
 function wait_for_minio_ready() {
     local minio_phase=
     for i in {1..5}; do
