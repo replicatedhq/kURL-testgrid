@@ -1,3 +1,4 @@
+#!/bin/bash
 
 # object store functions (create bucket, write object, get object)
 function object_store_bucket_exists() {
@@ -90,6 +91,12 @@ function dump_longhorn_logs() {
     done
 }
 
+function rook_ceph_object_store_info() {
+    export OBJECT_STORE_ACCESS_KEY=$(kubectl -n rook-ceph get secret rook-ceph-object-user-rook-ceph-store-kurl -o yaml | grep AccessKey | head -1 | awk '{print $2}' | base64 --decode)
+    export OBJECT_STORE_SECRET_KEY=$(kubectl -n rook-ceph get secret rook-ceph-object-user-rook-ceph-store-kurl -o yaml | grep SecretKey | head -1 | awk '{print $2}' | base64 --decode)
+    export OBJECT_STORE_CLUSTER_IP=$(kubectl -n rook-ceph get service rook-ceph-rgw-rook-ceph-store | tail -n1 | awk '{ print $3}')
+}
+
 function rook_ecph_object_store_info() {
     export OBJECT_STORE_ACCESS_KEY=$(kubectl -n rook-ceph get secret rook-ceph-object-user-rook-ceph-store-kurl -o yaml | grep AccessKey | head -1 | awk '{print $2}' | base64 --decode)
     export OBJECT_STORE_SECRET_KEY=$(kubectl -n rook-ceph get secret rook-ceph-object-user-rook-ceph-store-kurl -o yaml | grep SecretKey | head -1 | awk '{print $2}' | base64 --decode)
@@ -147,4 +154,27 @@ function validate_read_write_object_store() {
     make_testfile "$bucket" "$file"
 
     validate_testfile "$bucket" "$file"
+}
+
+# wait_for_minio_ready waits for minio pod to be running and ready
+function wait_for_minio_ready() {
+    local minio_phase=
+    for i in {1..5}; do
+      minio_phase="$(kubectl -n minio get pods -l app=minio -o jsonpath='{.items[*].status.phase}')"
+      if [ "$minio_phase" = "Running" ]; then
+        local minio_cluster_ip=
+        minio_cluster_ip="$(kubectl -n minio get svc minio -o jsonpath='{.spec.clusterIP}')"
+        if curl -f "http://$minio_cluster_ip/minio/health/live" ; then
+          if curl -f "http://$minio_cluster_ip/minio/health/ready" ; then
+            break
+          fi
+        fi
+      fi
+      if [ "$i" = "5" ]; then
+        echo "Minio not ready"
+        kubectl -n minio get pods
+        return 1
+      fi
+      sleep 5
+    done
 }
