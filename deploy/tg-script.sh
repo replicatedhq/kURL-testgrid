@@ -67,11 +67,15 @@ WantedBy=multi-user.target
 TGRUND
 
 echo "pulling tgrun image and extracting binary"
-docker pull replicated/tgrun:latest
+ctr image pull docker.io/replicated/tgrun:latest
 
-docker create -ti --name dummy replicated/tgrun:latest bash
-docker cp dummy:/bin/tgrun /bin/tgrun
-docker rm -f dummy
+ctr container create docker.io/replicated/tgrun:latest tgrundummy bash
+mkdir -p /tmp/tgrunmount
+ctr snapshot mounts /tmp/tgrunmount tgrundummy | sh
+
+cp /tmp/tgrunmount/bin/tgrun /bin/tgrun
+rm -rf /tmp/tgrunmount
+ctr container delete tgrundummy
 
 systemctl enable tgrun
 systemctl start tgrun
