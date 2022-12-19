@@ -74,6 +74,7 @@ mkdir -p /tmp/tgrunmount
 ctr snapshot mounts /tmp/tgrunmount tgrundummy | sh
 
 cp /tmp/tgrunmount/bin/tgrun /bin/tgrun
+umount /tmp/tgrunmount
 rm -rf /tmp/tgrunmount
 ctr container delete tgrundummy
 
