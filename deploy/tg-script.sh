@@ -14,7 +14,7 @@ mount /dev/nvme0n1 /var/openebs/local/
 
 echo "Installing kURL"
 INSTALL_SCRIPT=/root/kurl-install.sh
-curl https://kurl.sh/2e7f363 > $INSTALL_SCRIPT
+curl https://kurl.sh/1c12ac6 > $INSTALL_SCRIPT
 sed -i 's/parse_yaml_into_bash_variables$/parse_yaml_into_bash_variables\n    PRIVATE_ADDRESS=$(\/sbin\/ifconfig bond0:0 | awk "\/inet \/ {print \\$2}")/' $INSTALL_SCRIPT 
 chmod +x $INSTALL_SCRIPT
 ./$INSTALL_SCRIPT
