@@ -177,3 +177,118 @@ function wait_for_minio_ready() {
       sleep 5
     done
 }
+
+# create_deployment_with_mounted_volume creates an Nginx deployment with one replica, this deployment mounts a
+# PVC (using the default storage class) on provided $mountpoint argument. Returns as soon as `kubectl rollout`
+# says the deployment has been rolled out. Requires 3 arguments: the deployment name and namespace, and the
+# mount point. The PVC is named after the deployment name and the deployment uses `app=$deployment` as selection
+# labels.
+function create_deployment_with_mounted_volume() {
+    local deployment=$1
+    local namespace=$2
+    local mountpoint=$3
+
+    echo "creating pvc $deployment in $namespace namespace"
+    kubectl create -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "$deployment"
+  namespace: "$namespace"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+EOF
+
+    echo "creating deployment $deployment in $namespace namespace (label app=$deployment)"
+    kubectl create -f - <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "$deployment"
+  namespace: "$namespace"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "$deployment"
+  template:
+    metadata:
+      labels:
+        app: "$deployment"
+    spec:
+      volumes:
+        - name: pvc
+          persistentVolumeClaim:
+            claimName: "$deployment"
+      containers:
+        - name: container
+          image: nginx
+          volumeMounts:
+            - mountPath: "$mountpoint"
+              name: pvc
+EOF
+
+    echo "waiting deployment $deployment in $namespace roll out"
+    kubectl rollout status deployment "$deployment" -n "$namespace" --timeout=120s
+}
+
+# create_random_file_and_upload_to_deployment generates a 1MB random content file and uploads it to all Pods
+# containing `app=$deployment` labels. Receives as argument the deployment name, the namespace, a temporary
+# path (in the local host filesystem) where the random file is going to be stored. file is stored into the
+# $destination path inside the Pod.
+function create_random_file_and_upload_to_deployment() {
+    local deployment=$1
+    local namespace=$2
+    local tmp_file_path=$3
+    local destination=$4
+    echo "generating random file under $tmp_file_path"
+    dd if=/dev/urandom of="$tmp_file_path" bs=1MB count=1
+    for pod in $(kubectl get --no-headers pods -n "$namespace" -l "app=$deployment" -o custom-columns=:.metadata.name); do
+        echo "copying $tmp_file_path file to $pod:$destination"
+        kubectl cp -n "$namespace" "$tmp_file_path" "$pod:$destination"
+    done
+}
+
+# download_file_from_deployment_and_compare copies a file from Pods containing `app=$deployment` labels
+# and compares it with a local copy ($tmp_file_path argument). receives as argument the deployment name
+# (used to assemble the `app=$deployment` label), the namespace, the local file and the remote (inside
+# the Pod) file paths.
+function download_file_from_deployment_and_compare() {
+    local deployment=$1
+    local namespace=$2
+    local tmp_file_path=$3
+    local remote_file_path=$4
+    local local_sha=
+    local_sha=$(sha256sum < "$tmp_file_path")
+
+    echo "comparing local file $tmp_file_path remotely"
+    for pod in $(kubectl get --no-headers pods -n "$namespace" -l "app=$deployment" -o custom-columns=:.metadata.name); do
+        echo "comparing local file $tmp_file_path with remote $pod:$remote_file_path"
+        local remote_sha=
+        remote_sha=$(kubectl exec -n "$namespace" "$pod" -- cat "$remote_file_path" | sha256sum)
+        if [ "$local_sha" != "$remote_sha" ]; then
+            echo "File content mismatch, expected sha $local_sha, found $remote_sha"
+            exit 1
+        fi
+    done
+}
+
+# pvc_uses_provisioner checks if provided pvc uses the provided storage class provisioner. Gets first
+# the storage class in use and then grep the storage class for the provided provisioner string.
+function pvc_uses_provisioner() {
+    local pvc=$1
+    local namespace=$2
+    local provisioner=$3
+    echo "verifying if pvc $pvc uses provisioner $provisioner"
+    local sc=
+    sc=$(kubectl get pvc -n "$namespace" "$pvc" --no-headers -o custom-columns=:.spec.storageClassName)
+    if ! kubectl get sc "$sc" --no-headers | grep -q "$provisioner"; then
+        echo "pvc $pvc does not use provisioner $provisioner"
+        exit 1
+    fi
+    echo "pvc $pvc uses provisioner $provisioner"
+}
