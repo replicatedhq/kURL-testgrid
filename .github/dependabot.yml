@@ -17,7 +17,8 @@ updates:
       - "javascript"
       - "type::chore"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+    open-pull-requests-limit: 25
 
   - package-ecosystem: "github-actions"
     directory: "/"
