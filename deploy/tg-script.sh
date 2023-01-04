@@ -27,12 +27,12 @@ kubectl delete deployment openebs-admission-server -n openebs || true
 
 echo "Installing KubeVirt"
 kubectl create namespace kubevirt
-kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/v0.57.1/kubevirt-operator.yaml
-kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/v0.57.1/kubevirt-cr.yaml
+kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/v0.58.0/kubevirt-operator.yaml
+kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/v0.58.0/kubevirt-cr.yaml
 kubectl wait --timeout=180s --for=condition=Available -n kubevirt kv/kubevirt
 kubectl create ns cdi
-kubectl apply -f https://github.com/kubevirt/containerized-data-importer/releases/download/v1.55.0/cdi-operator.yaml
-kubectl apply -f https://github.com/kubevirt/containerized-data-importer/releases/download/v1.55.0/cdi-cr.yaml
+kubectl apply -f https://github.com/kubevirt/containerized-data-importer/releases/download/v1.55.2/cdi-operator.yaml
+kubectl apply -f https://github.com/kubevirt/containerized-data-importer/releases/download/v1.55.2/cdi-cr.yaml
 
 echo "Installing krew KubeVirt plugin"
 export HOME=/root
