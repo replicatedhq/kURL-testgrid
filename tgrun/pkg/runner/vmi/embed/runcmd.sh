@@ -11,6 +11,8 @@ function run_install() {
     fi
     AIRGAP_FLAG=
 
+    curl -sSL https://kots.io -H'User-Agent: Replicated_Troubleshoot/v1beta1' > /tmp/support-bundle-spec.yaml
+
     if [ "$AIRGAP" = "1" ]; then
         AIRGAP_FLAG=airgap
 
@@ -448,7 +450,7 @@ function collect_debug_info_sonobuoy() {
 function collect_support_bundle() {
     echo "collecting support bundle"
 
-    /usr/local/bin/kubectl-support_bundle https://kots.io
+    /usr/local/bin/kubectl-support_bundle /tmp/support-bundle-spec.yaml
     SUPPORT_BUNDLE=$(ls -1 ./ | grep support-bundle-)
     if [ -n "$SUPPORT_BUNDLE" ]; then
         echo "completed support bundle collection"
