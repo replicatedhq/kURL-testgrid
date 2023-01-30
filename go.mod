@@ -11,7 +11,7 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/pkg/errors v0.9.1
 	github.com/replicatedhq/kurlkinds v1.0.11
-	github.com/replicatedhq/troubleshoot v0.54.0
+	github.com/replicatedhq/troubleshoot v0.55.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
