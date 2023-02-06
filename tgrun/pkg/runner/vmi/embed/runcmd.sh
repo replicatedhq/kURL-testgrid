@@ -490,6 +490,7 @@ function wait_for_cluster_ready() {
         if [ $i -gt 20 ]; then
             report_failure "cluster_not_ready"
             report_status_update "failed"
+            collect_debug_info_after_kurl || true
             collect_support_bundle
             send_logs
             exit 1
