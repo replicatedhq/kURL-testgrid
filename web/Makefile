@@ -1,6 +1,9 @@
 SHELL := /bin/bash
 PROJECT_NAME ?= tgweb
 
+.PHONY: all
+all: deps lint build-okteto
+
 .PHONY: deps
 deps:
 	npm install
