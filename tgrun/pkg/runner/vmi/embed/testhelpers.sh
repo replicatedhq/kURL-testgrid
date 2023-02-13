@@ -323,6 +323,7 @@ spec:
       containers:
       - name: skopeo
         image: quay.io/skopeo/stable:latest
+        imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: authfile
           mountPath: /auth
@@ -380,6 +381,7 @@ spec:
       containers:
       - name: skopeo
         image: quay.io/skopeo/stable:latest
+        imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: authfile
           mountPath: /auth
