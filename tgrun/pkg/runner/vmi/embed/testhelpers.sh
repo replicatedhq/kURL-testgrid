@@ -295,7 +295,7 @@ function pvc_uses_provisioner() {
 
 # test_push_image_to_registry spawns a job to copy an image from docker.io into the local registry.
 # The job is created in the default namespace and it is deleted after the image is copied. This
-# function has a timeout of 5 minutes.
+# function has a timeout of 5 minutes. Image is pushed to <internal_docker_addr>/test/test:latest.
 function test_push_image_to_registry() {
     echo "Trying to copy an image to kURL internal registry"
     local registry_addr
@@ -351,7 +351,8 @@ EOF
 
 # test_pull_image_from_registry spawns a job that pulls an image from the local registry and stores
 # it in a local tar file inside the container. The job is created in the default namespace and it is
-# deleted after the image is copied. This function has a timeout of 5 minutes.
+# deleted after the image is copied. This function has a timeout of 5 minutes. Image is pulled from
+# <internal_docker_addr>/test/test:latest.
 function test_pull_image_from_registry() {
     echo "Trying to pull an image from kURL internal registry"
     local registry_addr
