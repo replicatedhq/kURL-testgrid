@@ -292,3 +292,113 @@ function pvc_uses_provisioner() {
     fi
     echo "pvc $pvc uses provisioner $provisioner"
 }
+
+# test_push_image_to_registry spawns a job to copy an image from docker.io into the local registry.
+# The job is created in the default namespace and it is deleted after the image is copied. This
+# function has a timeout of 5 minutes.
+function test_push_image_to_registry() {
+    echo "Trying to copy an image to kURL internal registry"
+    local registry_addr
+    registry_addr=$(kubectl get svc -n kurl registry -o jsonpath="{.spec.clusterIP}" 2>/dev/null)
+    if [ -z "$registry_addr" ]; then
+        echo "Failed to get registry address"
+        exit 1
+    fi
+
+    kubectl create -f - <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: skopeo-copy
+  namespace: default
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      volumes:
+      - name: authfile
+        secret:
+          secretName: registry-creds
+      containers:
+      - name: skopeo
+        image: quay.io/skopeo/stable:latest
+        volumeMounts:
+        - name: authfile
+          mountPath: /auth
+        args:
+        - copy
+        - --dest-tls-verify=false
+        - --dest-authfile=/auth/.dockerconfigjson
+        - docker://docker.io/library/registry:2.8.1
+        - docker://${registry_addr}/test/test:latest
+EOF
+
+    echo "Job created, waiting for completion"
+    if ! kubectl wait --for=condition=complete job/skopeo-copy -n default --timeout=5m; then
+        echo "Job failed"
+        kubectl get job/skopeo-copy -n default -o yaml
+        kubectl logs -n default job/skopeo-copy
+        kubectl delete job/skopeo-copy -n default
+        echo "Failed to copy image to registry"
+        exit 1
+    fi
+
+    echo "Job finished"
+    kubectl logs -n default job/skopeo-copy
+    kubectl delete job/skopeo-copy -n default
+}
+
+# test_pull_image_from_registry spawns a job that pulls an image from the local registry and stores
+# it in a local tar file inside the container. The job is created in the default namespace and it is
+# deleted after the image is copied. This function has a timeout of 5 minutes.
+function test_pull_image_from_registry() {
+    echo "Trying to pull an image from kURL internal registry"
+    local registry_addr
+    registry_addr=$(kubectl get svc -n kurl registry -o jsonpath="{.spec.clusterIP}" 2>/dev/null)
+    if [ -z "$registry_addr" ]; then
+        echo "Failed to get registry address"
+        exit 1
+    fi
+
+    kubectl create -f - <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: skopeo-pull
+  namespace: default
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      volumes:
+      - name: authfile
+        secret:
+          secretName: registry-creds
+      containers:
+      - name: skopeo
+        image: quay.io/skopeo/stable:latest
+        volumeMounts:
+        - name: authfile
+          mountPath: /auth
+        args:
+        - copy
+        - --src-tls-verify=false
+        - --src-authfile=/auth/.dockerconfigjson
+        - docker://${registry_addr}/test/test:latest
+        - docker-archive:/image.tar
+EOF
+
+    echo "Job created, waiting for completion"
+    if ! kubectl wait --for=condition=complete job/skopeo-pull -n default --timeout=5m; then
+        kubectl logs -n default job/skopeo-pull
+        kubectl delete job/skopeo-pull -n default
+        echo "Failed to copy image to registry"
+        exit 1
+    fi
+
+    echo "Job finished"
+    kubectl logs -n default job/skopeo-pull
+    kubectl delete job/skopeo-pull -n default
+}
