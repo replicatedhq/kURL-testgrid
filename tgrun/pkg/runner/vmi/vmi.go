@@ -373,7 +373,7 @@ func createK8sNode(singleTest types.SingleRun, nodeName string) error {
 						},
 					},
 				},
-				getEmptyDiskVolume("emptydisk1", resource.MustParse("50Gi")),
+				getEmptyDiskVolume("emptydisk1", resource.MustParse("80Gi")),
 			},
 		},
 	}
@@ -459,7 +459,7 @@ func createSendlogsNode(nodeID string) error {
 						},
 					},
 				},
-				getEmptyDiskVolume("emptydisk1", resource.MustParse("50Gi")),
+				getEmptyDiskVolume("emptydisk1", resource.MustParse("80Gi")),
 			},
 		},
 	}
