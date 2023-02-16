@@ -102,7 +102,7 @@ function wait_for_initprimary_done()
     fi
     echo "initprimary not ready"
     i=$((i+1))
-    if [ $i -gt 20 ]; then
+    if [ $i -gt 90 ]; then
       echo "wait_for_initprimary_done timeout"
       report_status_update "failed"
       send_logs
