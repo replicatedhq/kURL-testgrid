@@ -23,8 +23,6 @@ var lastScheduledInstance = time.Now().Add(-time.Minute)
 const Namespace = "default"
 const sleepTime = time.Second * 30
 
-var errCount = 0
-
 func MainRunLoop(runnerOptions types.RunnerOptions) error {
 	fmt.Println("beginning main run loop")
 
@@ -116,11 +114,11 @@ func MainRunLoop(runnerOptions types.RunnerOptions) error {
 			}
 
 			if err := Run(singleTest, uploadProxyURL, tempDir); err != nil {
-				fmt.Println("  Sleeping for", (2^errCount)*30, "seconds after error", err.Error())
-				time.Sleep(time.Duration(2^errCount) * sleepTime)
-				errCount++
+				backoffSecs := expBackoff()
+				fmt.Println("  Sleeping for", backoffSecs, "seconds after error", err.Error())
+				time.Sleep(time.Duration(backoffSecs) * time.Second)
 			} else {
-				errCount = 0
+				resetBackoff()
 			}
 		}
 	}
@@ -171,4 +169,19 @@ func getUploadProxyURL() (string, error) {
 	}
 
 	return fmt.Sprintf("https://%s", svc.Spec.ClusterIP), nil
+}
+
+var errCount = 0
+
+func expBackoff() int {
+	retVal := 30 // A base of 30 seconds
+	for i := 0; i < errCount; i++ {
+		retVal = retVal * 2
+	}
+	errCount++
+	return retVal
+}
+
+func resetBackoff() {
+	errCount = 0
 }
