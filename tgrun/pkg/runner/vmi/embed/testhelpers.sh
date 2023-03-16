@@ -467,7 +467,7 @@ function check_and_customize_kurl_integration_test_application() {
     svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
     app_content=$(curl -s $svc_ip 2>&1)
     if [ "$app_content" == "installation" ]; then 
-	    break
+      break
     fi
 
     echo "attempt $i to reach kurl integration test application ($svc_ip) failed, result:"
@@ -494,7 +494,7 @@ function check_and_customize_kurl_integration_test_application() {
     svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
     app_content=$(curl -s $svc_ip 2>&1)
     if [ "$app_content" == "upgrade" ]; then 
-	    break
+      break
     fi
 
     echo "attempt $i to reach kurl integration test application ($svc_ip) failed, result:"
