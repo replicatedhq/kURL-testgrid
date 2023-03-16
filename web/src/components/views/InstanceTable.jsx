@@ -380,7 +380,7 @@ const InstanceTable = (props) => {
                     </div>
                   }
                 </div>
-                {(instance.startedAt && !instance.isUnsupported && !instance.isSkipped) &&
+                {((instance.startedAt || instance.failureReason === "failed to create VMI") && !instance.isUnsupported && !instance.isSkipped) &&
                 <div className="flex flex1 alignItems--center cluster-node">
                   <div className="flex-column flex1 alignItems--flexEnd">
                     <button type="button" className="btn xsmall primary u-width--full u-marginBottom--5" onClick={() => viewNodeLogs(initialPrimaryId, instance)}>Logs Initialprimary Node</button>
