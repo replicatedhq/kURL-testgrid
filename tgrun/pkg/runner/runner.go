@@ -19,6 +19,8 @@ import (
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/vmi"
 )
 
+var errCount = 0
+
 func Run(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	err := execute(singleTest, uploadProxyURL, tempDir)
 
@@ -30,6 +32,11 @@ func Run(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 		if reportError := reportFailed(singleTest, err); reportError != nil {
 			return errors.Wrap(err, "failed to report test failed")
 		}
+		fmt.Println("  Sleeping for", (2^errCount)*30, "seconds")
+		time.Sleep(time.Duration(2^errCount) * time.Second * 30)
+		errCount++
+	} else {
+		errCount = 0
 	}
 
 	return nil
@@ -67,7 +74,53 @@ func reportStarted(singleTest types.SingleRun) error {
 	return nil
 }
 
+// reportFailed reports a test failure to the testgrid api
+// the error and singleTest contents will be included in the reported logs
 func reportFailed(singleTest types.SingleRun, testErr error) error {
+	hostname, err := os.Hostname()
+	if err != nil {
+		fmt.Printf("failed to get hostname: %s\n", err)
+		hostname = "unknown"
+	}
+
+	errorString := fmt.Sprintf("Test failed to start on %q with error: %s\n\n", hostname, testErr.Error())
+	testSpecs, err := json.Marshal(singleTest)
+	if err != nil {
+		fmt.Printf("failed to marshal singleTest: %s\n", err)
+		testSpecs = []byte("failed to marshal singleTest")
+	}
+
+	errorString = errorString + string(testSpecs)
+
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/v1/instance/%s/logs", singleTest.TestGridAPIEndpoint, singleTest.ID), bytes.NewReader([]byte(errorString)))
+	if err != nil {
+		return errors.Wrap(err, "failed to create logs request")
+	}
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute logs request")
+	}
+
+	failureRequest := tghandlers.FinishInstanceRequest{
+		Success:       false,
+		FailureReason: "failed to create VMI",
+	}
+
+	b, err := json.Marshal(failureRequest)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal request")
+	}
+
+	req, err = http.NewRequest("PUT", fmt.Sprintf("%s/v1/instance/%s/finish", singleTest.TestGridAPIEndpoint, singleTest.ID), bytes.NewReader(b))
+	if err != nil {
+		return errors.Wrap(err, "failed to create finish request")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute finish request")
+	}
+
 	return nil
 }
 
