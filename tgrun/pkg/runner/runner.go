@@ -19,8 +19,6 @@ import (
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/vmi"
 )
 
-var errCount = 0
-
 func Run(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	err := execute(singleTest, uploadProxyURL, tempDir)
 
@@ -30,13 +28,9 @@ func Run(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 		fmt.Println("  REF:", singleTest.KurlRef)
 		fmt.Println("  ERROR:", err)
 		if reportError := reportFailed(singleTest, err); reportError != nil {
-			return errors.Wrap(err, "failed to report test failed")
+			return errors.Wrapf(err, "failed to report test failed with error %s", reportError.Error())
 		}
-		fmt.Println("  Sleeping for", (2^errCount)*30, "seconds")
-		time.Sleep(time.Duration(2^errCount) * time.Second * 30)
-		errCount++
-	} else {
-		errCount = 0
+		return err
 	}
 
 	return nil
@@ -111,7 +105,7 @@ func reportFailed(singleTest types.SingleRun, testErr error) error {
 		return errors.Wrap(err, "failed to marshal request")
 	}
 
-	req, err = http.NewRequest("PUT", fmt.Sprintf("%s/v1/instance/%s/finish", singleTest.TestGridAPIEndpoint, singleTest.ID), bytes.NewReader(b))
+	req, err = http.NewRequest("POST", fmt.Sprintf("%s/v1/instance/%s/finish", singleTest.TestGridAPIEndpoint, singleTest.ID), bytes.NewReader(b))
 	if err != nil {
 		return errors.Wrap(err, "failed to create finish request")
 	}
