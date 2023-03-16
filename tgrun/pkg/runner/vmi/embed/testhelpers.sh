@@ -178,17 +178,15 @@ function wait_for_minio_ready() {
     done
 }
 
-# create_deployment_with_mounted_volume creates a deployment with one replica, this deployment mounts a PVC
-# (using the default storage class) on provided $mountpoint argument. Returns as soon as `kubectl rollout`
+# create_deployment_with_mounted_volume creates an Nginx deployment with one replica, this deployment mounts a
+# PVC (using the default storage class) on provided $mountpoint argument. Returns as soon as `kubectl rollout`
 # says the deployment has been rolled out. Requires 3 arguments: the deployment name and namespace, and the
-# mount point, the 4th argument is optional and is a path to the container image to be used by the deploy
-# (if not provided then "nginx" is used). The PVC is named after the deployment name and the deployment uses
-# `app=$deployment` as selection labels.
+# mount point. The PVC is named after the deployment name and the deployment uses `app=$deployment` as selection
+# labels.
 function create_deployment_with_mounted_volume() {
     local deployment=$1
     local namespace=$2
     local mountpoint=$3
-    local image=${4:-nginx}
 
     echo "creating pvc $deployment in $namespace namespace"
     kubectl create -f - <<EOF
@@ -205,7 +203,7 @@ spec:
       storage: 1Gi
 EOF
 
-    echo "creating deployment $deployment in $namespace namespace (label app=$deployment, image=$image)"
+    echo "creating deployment $deployment in $namespace namespace (label app=$deployment)"
     kubectl create -f - <<EOF
 apiVersion: apps/v1
 kind: Deployment
@@ -228,7 +226,7 @@ spec:
             claimName: "$deployment"
       containers:
         - name: container
-          image: "$image"
+          image: nginx
           volumeMounts:
             - mountPath: "$mountpoint"
               name: pvc
