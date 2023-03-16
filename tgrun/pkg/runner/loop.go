@@ -23,6 +23,8 @@ var lastScheduledInstance = time.Now().Add(-time.Minute)
 const Namespace = "default"
 const sleepTime = time.Second * 30
 
+var errCount = 0
+
 func MainRunLoop(runnerOptions types.RunnerOptions) error {
 	fmt.Println("beginning main run loop")
 
@@ -114,7 +116,11 @@ func MainRunLoop(runnerOptions types.RunnerOptions) error {
 			}
 
 			if err := Run(singleTest, uploadProxyURL, tempDir); err != nil {
-				return errors.Wrap(err, "failed to run test")
+				fmt.Println("  Sleeping for", (2^errCount)*30, "seconds after error", err.Error())
+				time.Sleep(time.Duration(2^errCount) * sleepTime)
+				errCount++
+			} else {
+				errCount = 0
 			}
 		}
 	}
