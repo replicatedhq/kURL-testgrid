@@ -407,3 +407,106 @@ EOF
     kubectl logs -n default job/skopeo-pull
     kubectl delete job/skopeo-pull -n default
 }
+
+# install_and_customize_kurl_integration_test_application deploys an application created solely for
+# integration test purposes. this application is a composed by a simple nginx serving a html page,
+# this page has a simple string as its content, the content of the string is defined by means of
+# a configuration called 'variable', i.e. whatever is set in 'variable' is printed as the output.
+# this function installs the application on the cluster and customize 'variable', then awaits for
+# the deployment to take place by attempting to reach the application through curl. this function
+# requires one argument: a path for a license file.
+function install_and_customize_kurl_integration_test_application() {
+  echo "attempting to install kurl integration test application."
+  local license_path=$1
+  if ! kubectl kots install --license-file=$license_path --namespace=default kurl-integration-test-application/stable ; then
+    echo "failed to install kurl integration test application."
+    exit 1
+  fi
+  echo "kurl integration test application has been successfully installed."
+
+  echo "attempting to customize kurl integration test application."
+  if ! kubectl kots set config kurl-integration-test-application --key variable --value installation --deploy ; then
+    echo "failed to customize kurl integration test application."
+    exit 1
+  fi
+  echo "kurl integration test application customized, waiting 2m for the deployment."
+
+  local svc_ip
+  local app_content
+  for i in $(seq 1 24); do
+    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+    app_content=$(curl -s $svc_ip 2>&1)
+    if [ "$app_content" == "installation" ]; then 
+      break
+    fi
+
+    echo "attempt $i to read kurl integration test application ($svc_ip) failed, result:"
+    echo $app_content
+    sleep 5 
+  done
+
+  if [ "$app_content" != "installation" ]; then 
+    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+    echo "error reading kurl integration test application ($svc_ip), result:"
+    curl -vvv $svc_ip
+    exit 1
+  fi
+
+  echo "kurl integration test application deployed successfully."
+}
+
+# check_and_customize_kurl_integration_test_application verifies if the kurl integration test app
+# is running with the config applied by install_and_customize_kurl_integration_test_application
+# then attempts to change the application config and redeploy it. awaits for the deployment after
+# the customization to roll out.
+function check_and_customize_kurl_integration_test_application() {
+  local svc_ip
+  local app_content
+  echo "checking if kurl integration test application is still running with the previously customized configuration."
+  for i in $(seq 1 12); do
+    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+    app_content=$(curl -s $svc_ip 2>&1)
+    if [ "$app_content" == "installation" ]; then 
+	    break
+    fi
+
+    echo "attempt $i to reach kurl integration test application ($svc_ip) failed, result:"
+    echo $app_content
+    sleep 5
+  done
+
+  if [ "$app_content" != "installation" ]; then 
+    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+    echo "error acessing kurl integration application, unexpected result when curling app:"
+    curl -vvv $svc_ip
+    exit 1
+  fi
+  echo "kurl integration test application is running with the previosly customized config."
+
+  echo "updating kurl integration test application configuration."
+  if ! kubectl kots set config kurl-integration-test-application --key variable --value upgrade --deploy ; then
+    echo "failed to update kurl integration test application configuration."
+    exit 1
+  fi
+  echo "kurl integration test application customized successfully, awaiting for the deployment."
+
+  for i in $(seq 1 24); do
+    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+    app_content=$(curl -s $svc_ip 2>&1)
+    if [ "$app_content" == "upgrade" ]; then 
+	    break
+    fi
+
+    echo "attempt $i to reach kurl integration test application ($svc_ip) failed, result:"
+    echo $app_content
+    sleep 5
+  done
+
+  if [ "$app_content" != "upgrade" ]; then 
+    echo "error acessing kurl integration test application, unexpected result when curling app:"
+    curl -vvv $svc_ip
+    exit 1
+  fi
+
+  echo "kurl integration test application still working after the upgrade."
+}
