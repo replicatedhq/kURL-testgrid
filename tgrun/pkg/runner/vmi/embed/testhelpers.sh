@@ -407,3 +407,40 @@ EOF
     kubectl logs -n default job/skopeo-pull
     kubectl delete job/skopeo-pull -n default
 }
+
+# resize_registry_pvc deletes the original registry pvc (with all its data) and creates a new
+# one with the provided size (if no size is provided creates a new pvc with 5Gi). if registry
+# pvc can't be found, returns immediately. the new pvc uses the cluster default storage class.
+function resize_registry_pvc() {
+    local size=${1:-5Gi}
+    echo "resizing registry pvc to $size."
+    if ! kubectl get pvc registry-pvc -n kurl &> /dev/null; then
+        echo "registry pvc not found, registry is using object storage."
+        return 0
+    fi
+
+    echo "scaling registry deployment to 0 replicas."
+    kubectl scale deployment -n kurl registry --replicas=0
+    echo "deleting registry pvc."
+    kubectl delete pvc registry-pvc -n kurl
+    echo "recreating registry pvc with size $size."
+    kubectl apply -f - << EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-pvc
+  namespace: kurl
+  labels:
+    app: registry
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: "$size"
+EOF
+
+    echo "scaling registry back up to 1 replica."
+    kubectl scale deployment -n kurl registry --replicas=1
+    kubectl rollout status deployment registry -n kurl --timeout=300s
+}
