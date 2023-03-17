@@ -71,15 +71,6 @@ func reportStarted(singleTest types.SingleRun) error {
 // reportFailed reports a test failure to the testgrid api
 // the error and singleTest contents will be included in the reported logs
 func reportFailed(singleTest types.SingleRun, testErr error) error {
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/v1/instance/%s/running", singleTest.TestGridAPIEndpoint, singleTest.ID), bytes.NewReader([]byte("{}")))
-	if err != nil {
-		return errors.Wrap(err, "failed to create instance start request")
-	}
-	_, err = http.DefaultClient.Do(req)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute instance start request")
-	}
-
 	hostname, err := os.Hostname()
 	if err != nil {
 		fmt.Printf("failed to get hostname: %s\n", err)
@@ -95,7 +86,7 @@ func reportFailed(singleTest types.SingleRun, testErr error) error {
 
 	errorString = errorString + string(testSpecs)
 
-	req, err = http.NewRequest("PUT", fmt.Sprintf("%s/v1/instance/%s/logs", singleTest.TestGridAPIEndpoint, singleTest.ID), bytes.NewReader([]byte(errorString)))
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/v1/instance/%s/logs", singleTest.TestGridAPIEndpoint, singleTest.ID), bytes.NewReader([]byte(errorString)))
 	if err != nil {
 		return errors.Wrap(err, "failed to create logs request")
 	}
