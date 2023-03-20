@@ -1,5 +1,70 @@
 #!/bin/bash
 
+# KOTS_INTEGRATION_TEST_APPLICATION_LICENSE holds the license we use when deploying our sample
+# application. this license is hardcoded here and has been copied from the vendor portal. we do
+# not deem dangerous the possible leak of this license (for context: the application is just a
+# nginx deployment. to manage this application please visit:
+# https://vendor.replicated.com/apps/kurl-integration-test-application.
+export KOTS_INTEGRATION_TEST_APPLICATION_LICENSE="
+YXBpVmVyc2lvbjoga290cy5pby92MWJldGExCmtpbmQ6IExpY2Vuc2UKbWV0YWRhdGE6CiAgbmFtZToga3VybGludGVncmF0aW9u
+dGVzdHVzZXIKc3BlYzoKICBhcHBTbHVnOiBrdXJsLWludGVncmF0aW9uLXRlc3QtYXBwbGljYXRpb24KICBjaGFubmVsSUQ6IDJO
+NEd4anRISG5lY3RJMU9WSG9ZVGYyTndtZwogIGNoYW5uZWxOYW1lOiBTdGFibGUKICBjdXN0b21lck5hbWU6IEt1cmwgSW50ZWdy
+YXRpb24gVGVzdCBVc2VyCiAgZW5kcG9pbnQ6IGh0dHBzOi8vcmVwbGljYXRlZC5hcHAKICBlbnRpdGxlbWVudHM6CiAgICBleHBp
+cmVzX2F0OgogICAgICBkZXNjcmlwdGlvbjogTGljZW5zZSBFeHBpcmF0aW9uCiAgICAgIHRpdGxlOiBFeHBpcmF0aW9uCiAgICAg
+IHZhbHVlOiAiIgogICAgICB2YWx1ZVR5cGU6IFN0cmluZwogIGlzR2l0T3BzU3VwcG9ydGVkOiB0cnVlCiAgaXNOZXdLb3RzVWlF
+bmFibGVkOiB0cnVlCiAgaXNTZW12ZXJSZXF1aXJlZDogdHJ1ZQogIGlzU25hcHNob3RTdXBwb3J0ZWQ6IHRydWUKICBsaWNlbnNl
+SUQ6IDJONEhBQ2E1Rlc3Q0toSHNCenhZbEs1NkxFOAogIGxpY2Vuc2VTZXF1ZW5jZTogMQogIGxpY2Vuc2VUeXBlOiBkZXYKICBz
+aWduYXR1cmU6IGV5SnNhV05sYm5ObFJHRjBZU0k2SW1WNVNtaGpSMnhYV2xoS2VtRlhPWFZKYW05cFlUSTVNR041TlhCaWVUa3lU
+VmRLYkdSSFJYaEphWGRwWVRKc2RWcERTVFpKYTNod1dUSldkV015VldsTVEwcDBXbGhTYUZwSFJqQlpVMGsyWlhsS2RWbFhNV3hK
+YW05cFlUTldlV0pIYkhWa1IxWnVZMjFHTUdGWE9YVmtSMVo2WkVoV2VscFlTV2xtVTNkcFl6TkNiRmw1U1RabGVVcHpZVmRPYkdK
+dVRteFRWVkZwVDJsSmVWUnFVa2xSVlU1b1RsVmFXRTR3VGt4aFJXaDZVVzV3TkZkWGVFeE9WRnBOVWxSbmFVeERTbk5oVjA1c1lt
+NU9iRlpJYkhkYVUwazJTVzFTYkdScFNYTkpiVTR4WXpOU2RtSlhWbmxVYlVaMFdsTkpOa2xyZERGamJYZG5VMWMxTUZwWFpIbFpX
+Rkp3WWpJMFoxWkhWbnBrUTBKV1l6SldlVWxwZDJsWldFSjNWVEo0TVZwNVNUWkpiWFF4WTIxM2RHRlhOVEJhVjJSNVdWaFNjR0l5
+TkhSa1IxWjZaRU14YUdOSVFuTmhWMDVvWkVkc2RtSnBTWE5KYlU1dldWYzFkVnBYZUVwU1EwazJTV3BLVDA1RlpEUmhibEpKVTBj
+MWJGa3pVa3BOVlRsWFUwYzVXbFpIV1hsVWJtUjBXbmxKYzBsdFRtOVpWelYxV2xkNFQxbFhNV3hKYW05cFZUTlNhRmx0ZUd4SmFY
+ZHBZa2RzYWxwWE5YcGFWazVzWTFoV2JHSnRUbXhKYW05NFRFTktiR0p0VW5kaU1teDFaRU5KTmtsdGFEQmtTRUo2VDJrNGRtTnRW
+bmRpUjJ4cVdWaFNiRnBETldoalNFRnBURU5LYkdKdVVuQmtSM2hzWWxkV2RXUklUV2xQYm5OcFdsaG9kMkZZU214ak1UbG9aRU5K
+Tm1WNVNqQmhXRkp6V2xOSk5rbHJWalJqUjJ4NVdWaFNjR0l5TkdsTVEwcHJXbGhPYW1OdGJIZGtSMngyWW1sSk5rbHJlSEJaTWxa
+MVl6SlZaMUpZYUhkaFdFcG9aRWRzZG1KcFNYTkpibHBvWWtoV2JFbHFiMmxKYVhkcFpHMUdjMlJYVmxWbFdFSnNTV3B2YVZVelVu
+bGhWelZ1U1c0eE9VeERTbkJqTUdSd1pFVTVkMk14VGpGalNFSjJZMjVTYkZwRFNUWmtTRW94V2xOM2FXRllUbFJpYlVaM1l6Sm9k
+bVJHVGpGalNFSjJZMjVTYkZwRFNUWmtTRW94V2xOM2FXRllUazlhV0dSTVlqTlNlbFpYYkVaaWJVWnBZa2RXYTBscWNEQmpibFpz
+VEVOS2NHTXhUbXhpV0Zwc1kyeEtiR05ZVm5CamJWWnJTV3B3TUdOdVZteG1XREE5SWl3aWFXNXVaWEpUYVdkdVlYUjFjbVVpT2lK
+bGVVcHpZVmRPYkdKdVRteFZNbXh1WW0xR01HUllTbXhKYW05cFl6SnZkMkV5TVRKVmFtY3pUbnBzV0Uwd2JFOVZWRTR3Vkd0d1ZH
+UkhOVkpVYlRWc1dtMVJNMDF0U2s1WlYxVXhaVmRXUmxkSVFsUk1NazVLV1RCS1RWUkdUbGhTTTFreVkwUkNNbE16VmtSYVZFbHlV
+ek5GTUU1WWJFWlpNR3cxV2xka1UyRnJlRVZXTTFsMlVtMXdkbUpyYTNoUFZWcEtUVzVaTUV3eU9VNVBSbWg0VkZoa1RVMXBPVVZV
+TTBaS1l6TktXRlZGU1RKak1XdDJXV3hDTTJOVlZuVmhiazVJWVZkT1JVOUdTbXhPVkVKSVdteENXRlF5VWxsaWEzTTFXbFZXTUZW
+WVFsaFpWVXBZWTFWc05sTXlPWE5TUlhCeFdXdHNjazF0TlRWVGJtTjVUMFJhU1UxR2FFMWtSa2t3V2taV1VsRlRPVFJQVm5CeldX
+NUNjMlZ0WjNoU01sSnlWREpuTW1ReVpHdE5NbFp2Wkd4Vk1XSXpaRlpWVnpWV1dXNUtUVTVJUlhsak1rcDVWakZLUTFvelZqSk9N
+a1p4VW1wRmNrNVdiRVJNZWtKRlZFUkdTRk5GTlhwYWJWWmFZVEpvU1ZGVVJqUlpiVlpxVFVkNGVWVXhRbFJTVms1UFlWVndUVlV4
+YUhKU2JtY3pWRzE0UjFOdGNIZGlia3BJWTBSb1drMHpVa1JQUm5CcldtcENOVTlVUmpGaWJIQnNZbGhTZFZwdVpFTlhiVXBYVVcx
+T2FGZElXblpOYVRsWldURm5NRmxYVVROa2JYaGFUMFZKTW1JeGJIQk5iRXBTVUZRd2FVeERTbmRrVjBwellWZE9URnBZYTJsUGFV
+bDBURk13ZEV4VlNrWlNNR3hQU1VaQ1ZsRnJlRXBSZVVKTVVsWnJkRXhUTUhSTVZuaDFWRlZzU2xGcmJIRlJWVFZEV2pKMGVHRkhk
+SEJTZW13elRVVktRbFZWVmtkUlZVWlFVVEJHVWs5RlJrNVRWV3hEVVRKa1RGRXdSbEpTVlVWNVkyMTRjR014V21GVFJrNDFWREl4
+Um1OVmVHMVNNa1owWTFaNGRVNXBPVlpUYWxwSlpVVkZlbUZXUmxwVFJWWXhXakJ3TUdOc1NuSmpiV3h1WW01R1ZWVkhTbWhXUjJS
+UFZHeHdTRTVxWkdoaU1WVjZUREE1Tmt0NlJsUmFXRloyWld4YU1VMTZTbXRpYTFaaFZrVldlbVJHZUhWV1ZUVjZWMVZXUTFkRlRq
+QkxNMUpHVDBkU2NsSnJXbHBqTW1NMVZFUnNSMk5GV20xV1dFWndVVzA0ZWxsNldrSmpha1V3WVd0b2RsRnNjRFpaVjBaSllqRkdi
+RkZyUmpSVFZYZDNWV3BzYzFveVVrSlZSbmgxWTFoa05GbHJPVlpqTUhReVYxZE9Wa3N5U2xCVGFteE1VVEpHY0dJeWNFWk5WelY1
+VWtkWmVHUkhXakJoTVZKT1dqTk9UVkl6Wkc5WmEyeFVUa1pvVFZaVVJrVk5hbVJJVlhwa1JXTXdaRnBOYTJoYVRXeDRkVnBXYTNw
+UmFYUnRXbTFqTW1SSVVsRk9lbG96VGpKMFJsb3dhSEJVYlRWTlYyc3hVMVZGU2pKalJUQXhWbFZPTlZaSE5XaFZSM2gyVmtkRk1X
+UkZOVkppVldNeFZsWmtXRXd5YUcxVFJsazFVVmMwZUZNeGVIVlBSRnB0WkZoTk5XTnVVa2hsUlZKTVpHdHNVMUY1ZERGYVZrWkhU
+VWMxYUdKWVFubFRNakZVWkdsMFZHRXdhM0pqYlRGaFRWaG9TRTFyWkVoU2JYUllVakZOZGs1RmJEUmplbHBWVDBSc2FsUnJaR3RS
+Vm5oMVVrWkdTbEpGUmxKUlZVcGpZbWt3ZEV4VE1IUlNWVFZGU1VaQ1ZsRnJlRXBSZVVKTVVsWnJkRXhUTUhSTVZuaDFTV2wzYVdF
+eVZqVlZNbXh1WW0xR01HUllTbXhKYW05cFdsaHNTMlZ0UmxoYVNGWmFWMFpKZUZreU1WWmhWVGx3VTJ0T1drMHdOV2hhUmxadlpF
+WldTR05ITVZaWFJVcEVWakZhVTFkR1NYbE9WWFJUWW0xU1RGZHRNV3BPVm5CWFYxUkNhVlpXU2tWWmVrNUhWRlp3Y2s1RVVtaE5S
+RUl5V1RKNFMxWnRUa1ZWYWs1clRVUkdNRlF4VG5wTlJteDFVMnRvYWsxck5ERldSRUV3WkRKV2NXSkdRbGROUkVaUFZteE5OVTFW
+TlVkVGEzaHJWbFpWZUZVeFpHdGliVVowVTJ4c2FFMXNTbUZYVkVaV1RrZEtSbUZJV21sU1ZrcFJWbGRzTUdKV1JYbFhiVEZPVFVa
+d1QxWkZVazlUUlRSNFUyeEdWbUV3V2tSWk1uTTBUVEZ3UlZGcmNGVldWWEJ4Vld0V1dtVkdSWGxoUldSclVqQlZkMWRVU210a1Jr
+WlpWMnBHYVdFeWVIWlpNRlpQVG1zd2VtRjZRbXBXVlZweVYycENjMVpHVVhsa1JVNWFWMFpGTUZaWGRFcE5iVkpHVW0xMGEyRXdO
+VFpWYkdodlZURmFWbFJyVmxOU2VtY3dWV3RPTUdWck5IaFNiWEJTWVd0YU1GcFhNREZqUlRWR1ZHeGthVlo2UVRCWk1HaDJZMnN4
+U1dFelpFOWhla1ozVmxaa1MyRldjRmhUYkdSUFZqQnJlVlZ0ZEZkVlYwWnhVMnR3VjFZd1dsTldWV1J2VFVkS1IxRnVUbXRTYXpW
+SlZqRldiMkZyTVVoT1ZsSnBUVzA0TUZWc2FHdE5iRnBZVm01U1lVMXRPSGhVVmxZd1RsZFdjMkZHV2xoU1JYQm9WakJrZDFSVk5W
+aFhhelZoVW10YVVsUXdVa3RTYlZaeVpVWkthVk5IVWxsWGJYQkxaVWRHVlZSc2JGTldWMUpWV2xaYVIxVnNUblJVYWxKVFVucHNO
+RmRVVG05aE1VbDVaVVZLWVUxdVRYaFZXR3MxVGtaU2NsUllTbUZTTUZwYVdWVlNVMkZHVmtoYVJ6RmhUV3hhZWxwRldrSk5SMFY1
+Vkcxd1QySlZhekJYYWtwR1pWZEdXRTFJYUdGWFJsa3dXVEZrTUZkWFZuVlplbXhSVlRCc2VsTlhNV3RqTWtsNVUyMW9hVkpZVW5O
+YVZsWnpZVEJzY1dJeWJGcGlWa3B6VjJ4U1ZrMXJOVlZYV0dSYVRXeHdjRlJyVWs5aGF6bFlVMWhzVUZJd2NIUlVNVkp2WWtac1dG
+UnRhR0ZpVlZWNVZHdFNXbUZYV2xKUVZEQnBabEU5UFNKOQo=
+"
+
 # object store functions (create bucket, write object, get object)
 function object_store_bucket_exists() {
     local bucket=$1
@@ -413,46 +478,48 @@ EOF
 # this page has a simple string as its content, the content of the string is defined by means of
 # a configuration called 'variable', i.e. whatever is set in 'variable' is printed as the output.
 # this function installs the application on the cluster and customize 'variable', then awaits for
-# the deployment to take place by attempting to reach the application through curl. this function
-# requires one argument: a path for a license file.
+# the deployment to take place by attempting to reach the application through curl.
 function install_and_customize_kurl_integration_test_application() {
-  echo "attempting to install kurl integration test application."
-  local license_path=$1
-  if ! kubectl kots install --license-file=$license_path --namespace=default kurl-integration-test-application/stable ; then
-    echo "failed to install kurl integration test application."
-    exit 1
-  fi
-  echo "kurl integration test application has been successfully installed."
+    echo "attempting to install kurl integration test application."
+    local license_path=$(mktemp)
+    echo $KOTS_INTEGRATION_TEST_APPLICATION_LICENSE | base64 -d > $license_path
+    if ! kubectl kots install --license-file=$license_path --namespace=default kurl-integration-test-application/stable ; then
+        rm -rf $license_path
+        echo "failed to install kurl integration test application."
+        exit 1
+    fi
+    rm -rf $license_path
+    echo "kurl integration test application has been successfully installed."
 
-  echo "attempting to customize kurl integration test application."
-  if ! kubectl kots set config kurl-integration-test-application --key variable --value installation --deploy ; then
-    echo "failed to customize kurl integration test application."
-    exit 1
-  fi
-  echo "kurl integration test application customized, waiting 2m for the deployment."
+    echo "attempting to customize kurl integration test application."
+    if ! kubectl kots set config kurl-integration-test-application --key variable --value installation --deploy ; then
+        echo "failed to customize kurl integration test application."
+        exit 1
+    fi
+    echo "kurl integration test application customized, waiting 2m for the deployment."
 
-  local svc_ip
-  local app_content
-  for i in $(seq 1 24); do
-    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
-    app_content=$(curl -s $svc_ip 2>&1)
-    if [ "$app_content" == "installation" ]; then
-      break
+    local svc_ip
+    local app_content
+    for i in $(seq 1 24); do
+        svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+        app_content=$(curl -s $svc_ip 2>&1)
+        if [ "$app_content" == "installation" ]; then
+            break
+        fi
+
+        echo "attempt $i to read kurl integration test application ($svc_ip) failed, result:"
+        echo $app_content
+        sleep 5
+    done
+
+    if [ "$app_content" != "installation" ]; then
+        svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+        echo "error reading kurl integration test application ($svc_ip), result:"
+        curl -vvv $svc_ip
+        exit 1
     fi
 
-    echo "attempt $i to read kurl integration test application ($svc_ip) failed, result:"
-    echo $app_content
-    sleep 5
-  done
-
-  if [ "$app_content" != "installation" ]; then
-    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
-    echo "error reading kurl integration test application ($svc_ip), result:"
-    curl -vvv $svc_ip
-    exit 1
-  fi
-
-  echo "kurl integration test application deployed successfully."
+    echo "kurl integration test application deployed successfully."
 }
 
 # check_and_customize_kurl_integration_test_application verifies if the kurl integration test app
@@ -460,53 +527,53 @@ function install_and_customize_kurl_integration_test_application() {
 # then attempts to change the application config and redeploy it. awaits for the deployment after
 # the customization to roll out.
 function check_and_customize_kurl_integration_test_application() {
-  local svc_ip
-  local app_content
-  echo "checking if kurl integration test application is still running with the previously customized configuration."
-  for i in $(seq 1 12); do
-    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
-    app_content=$(curl -s $svc_ip 2>&1)
-    if [ "$app_content" == "installation" ]; then
-      break
+    local svc_ip
+    local app_content
+    echo "checking if kurl integration test application is still running with the previously customized configuration."
+    for i in $(seq 1 12); do
+        svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+        app_content=$(curl -s $svc_ip 2>&1)
+        if [ "$app_content" == "installation" ]; then
+            break
+        fi
+
+        echo "attempt $i to reach kurl integration test application ($svc_ip) failed, result:"
+        echo $app_content
+        sleep 5
+    done
+
+    if [ "$app_content" != "installation" ]; then
+        svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+        echo "error acessing kurl integration application, unexpected result when curling app:"
+        curl -vvv $svc_ip
+        exit 1
+    fi
+    echo "kurl integration test application is running with the previosly customized config."
+
+    echo "updating kurl integration test application configuration."
+    if ! kubectl kots set config kurl-integration-test-application --key variable --value upgrade --deploy ; then
+        echo "failed to update kurl integration test application configuration."
+        exit 1
+    fi
+    echo "kurl integration test application customized successfully, awaiting for the deployment."
+
+    for i in $(seq 1 24); do
+        svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
+        app_content=$(curl -s $svc_ip 2>&1)
+        if [ "$app_content" == "upgrade" ]; then
+            break
+        fi
+
+        echo "attempt $i to reach kurl integration test application ($svc_ip) failed, result:"
+        echo $app_content
+        sleep 5
+    done
+
+    if [ "$app_content" != "upgrade" ]; then
+        echo "error acessing kurl integration test application, unexpected result when curling app:"
+        curl -vvv $svc_ip
+        exit 1
     fi
 
-    echo "attempt $i to reach kurl integration test application ($svc_ip) failed, result:"
-    echo $app_content
-    sleep 5
-  done
-
-  if [ "$app_content" != "installation" ]; then
-    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
-    echo "error acessing kurl integration application, unexpected result when curling app:"
-    curl -vvv $svc_ip
-    exit 1
-  fi
-  echo "kurl integration test application is running with the previosly customized config."
-
-  echo "updating kurl integration test application configuration."
-  if ! kubectl kots set config kurl-integration-test-application --key variable --value upgrade --deploy ; then
-    echo "failed to update kurl integration test application configuration."
-    exit 1
-  fi
-  echo "kurl integration test application customized successfully, awaiting for the deployment."
-
-  for i in $(seq 1 24); do
-    svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
-    app_content=$(curl -s $svc_ip 2>&1)
-    if [ "$app_content" == "upgrade" ]; then
-      break
-    fi
-
-    echo "attempt $i to reach kurl integration test application ($svc_ip) failed, result:"
-    echo $app_content
-    sleep 5
-  done
-
-  if [ "$app_content" != "upgrade" ]; then
-    echo "error acessing kurl integration test application, unexpected result when curling app:"
-    curl -vvv $svc_ip
-    exit 1
-  fi
-
-  echo "kurl integration test application still working after the upgrade."
+    echo "kurl integration test application still working after the upgrade."
 }
