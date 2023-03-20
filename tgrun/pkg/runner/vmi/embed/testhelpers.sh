@@ -436,16 +436,16 @@ function install_and_customize_kurl_integration_test_application() {
   for i in $(seq 1 24); do
     svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
     app_content=$(curl -s $svc_ip 2>&1)
-    if [ "$app_content" == "installation" ]; then 
+    if [ "$app_content" == "installation" ]; then
       break
     fi
 
     echo "attempt $i to read kurl integration test application ($svc_ip) failed, result:"
     echo $app_content
-    sleep 5 
+    sleep 5
   done
 
-  if [ "$app_content" != "installation" ]; then 
+  if [ "$app_content" != "installation" ]; then
     svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
     echo "error reading kurl integration test application ($svc_ip), result:"
     curl -vvv $svc_ip
@@ -466,7 +466,7 @@ function check_and_customize_kurl_integration_test_application() {
   for i in $(seq 1 12); do
     svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
     app_content=$(curl -s $svc_ip 2>&1)
-    if [ "$app_content" == "installation" ]; then 
+    if [ "$app_content" == "installation" ]; then
       break
     fi
 
@@ -475,7 +475,7 @@ function check_and_customize_kurl_integration_test_application() {
     sleep 5
   done
 
-  if [ "$app_content" != "installation" ]; then 
+  if [ "$app_content" != "installation" ]; then
     svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
     echo "error acessing kurl integration application, unexpected result when curling app:"
     curl -vvv $svc_ip
@@ -493,7 +493,7 @@ function check_and_customize_kurl_integration_test_application() {
   for i in $(seq 1 24); do
     svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
     app_content=$(curl -s $svc_ip 2>&1)
-    if [ "$app_content" == "upgrade" ]; then 
+    if [ "$app_content" == "upgrade" ]; then
       break
     fi
 
@@ -502,7 +502,7 @@ function check_and_customize_kurl_integration_test_application() {
     sleep 5
   done
 
-  if [ "$app_content" != "upgrade" ]; then 
+  if [ "$app_content" != "upgrade" ]; then
     echo "error acessing kurl integration test application, unexpected result when curling app:"
     curl -vvv $svc_ip
     exit 1
