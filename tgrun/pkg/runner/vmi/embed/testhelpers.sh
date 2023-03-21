@@ -482,7 +482,7 @@ EOF
 function install_and_customize_kurl_integration_test_application() {
     echo "attempting to install kurl integration test application."
     local license_path=$(mktemp)
-    echo $KOTS_INTEGRATION_TEST_APPLICATION_LICENSE | base64 -d > $license_path
+    echo "$KOTS_INTEGRATION_TEST_APPLICATION_LICENSE" | base64 -d > $license_path
     if ! kubectl kots install --license-file=$license_path --namespace=default kurl-integration-test-application/stable ; then
         rm -rf $license_path
         echo "failed to install kurl integration test application."
