@@ -45,10 +45,10 @@ function run_install() {
     send_logs
 
     if [ "$NUM_PRIMARY_NODES" -gt 1 ]; then
-        cat install.sh | timeout 30m bash -s $AIRGAP_FLAG ${KURL_FLAGS[@]} enforce-host-packages ekco-enable-internal-load-balancer
+        cat install.sh | timeout 30m bash -s $AIRGAP_FLAG ${KURL_FLAGS[@]} ekco-enable-internal-load-balancer
         KURL_EXIT_STATUS=$?
     else
-        cat install.sh | timeout 30m bash -s $AIRGAP_FLAG ${KURL_FLAGS[@]} enforce-host-packages
+        cat install.sh | timeout 30m bash -s $AIRGAP_FLAG ${KURL_FLAGS[@]}
         KURL_EXIT_STATUS=$?
     fi
 
@@ -100,7 +100,7 @@ function run_upgrade() {
     echo "running kurl upgrade at '$(date)'"
     send_logs
 
-    cat install.sh | timeout 60m bash -s $AIRGAP_UPGRADE_FLAG ${KURL_FLAGS[@]} enforce-host-packages
+    cat install.sh | timeout 60m bash -s $AIRGAP_UPGRADE_FLAG ${KURL_FLAGS[@]}
     KURL_EXIT_STATUS=$?
 
     if [ "$KURL_EXIT_STATUS" -eq 0 ]; then
@@ -245,13 +245,13 @@ function store_join_command() {
     secondaryJoin=$(echo $joincommand | grep -o -P '(?<=nodes:).*(?=To)' | xargs echo -n)
     secondaryJoin=$(remove_first_element $secondaryJoin)
     secondaryJoin=$(remove_last_element $secondaryJoin)
-    secondaryJoin=$(echo "$secondaryJoin enforce-host-packages" | base64 | tr -d '\n' )
+    secondaryJoin=$(echo $secondaryJoin | base64 | tr -d '\n' )
 
     primaryJoin=$(echo $joincommand | grep -o -P '(?<=nodes:).*(?=)') # return from secondary till the end
     primaryJoin=$(echo $primaryJoin | grep -o -P '(?<=nodes:).*(?=)') # take the primary command only
     primaryJoin=$(remove_first_element $primaryJoin)
     primaryJoin=$(remove_last_element $primaryJoin)
-    primaryJoin=$(echo "$primaryJoin enforce-host-packages" | base64 | tr -d '\n' )
+    primaryJoin=$(echo $primaryJoin | base64 | tr -d '\n' )
 
     curl -X POST -d "{\"primaryJoin\": \"${primaryJoin}\",\"secondaryJoin\": \"${secondaryJoin}\"}" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/join-command"
     local exit_status="$?"
