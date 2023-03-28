@@ -352,6 +352,10 @@ function disable_internet() {
 
     iptables -L
 
+    # disable yum repos
+    find /etc/yum.repos.d/ -maxdepth 1 -name '*.repo' -exec mv "{}" "{}.bak" \;
+    yum clean metadata
+
     echo "testing disabled internet"
     curl -v --connect-timeout 5 --max-time 5 "http://www.google.com"
     local exit_status="$?"

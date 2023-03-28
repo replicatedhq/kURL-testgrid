@@ -577,3 +577,20 @@ function check_and_customize_kurl_integration_test_application() {
 
     echo "kurl integration test application still working after the upgrade."
 }
+
+function is_rhel_9_variant() {
+    if grep '^ID=' /etc/os-release | grep -qE '(centos|rhel|ol|rocky)' ; then
+        if grep '^VERSION_ID=' /etc/os-release | grep -q '=*"9' ; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+function rhel_9_install_host_packages() {
+    local packages=("$@")
+    if is_rhel_9_variant ; then
+      # install required host packages
+      yum install -y "${packages[@]}"
+    fi
+}
