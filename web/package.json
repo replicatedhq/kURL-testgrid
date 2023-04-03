@@ -38,7 +38,7 @@
     "sass-loader": "^13.2.0",
     "screen": "^0.2.10",
     "source-map-loader": "^4.0.1",
-    "style-loader": "^3.3.1",
+    "style-loader": "^3.3.2",
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.3",
     "url-loader": "^4.1.1",
