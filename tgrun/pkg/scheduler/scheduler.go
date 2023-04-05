@@ -210,6 +210,9 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 		}
 	}
 
+	// shuffle the planned instances so that a mix of OSes and specs are tested as soon as possible
+	rand.Shuffle(len(plannedInstances), func(i, j int) { plannedInstances[i], plannedInstances[j] = plannedInstances[j], plannedInstances[i] })
+
 	if err := sendStartInstancesRequest(schedulerOptions, plannedInstances); err != nil {
 		return errors.Wrap(err, "failed to report ref started")
 	}
