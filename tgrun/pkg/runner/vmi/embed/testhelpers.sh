@@ -492,7 +492,7 @@ function install_and_customize_kurl_integration_test_application() {
     echo "kurl integration test application has been successfully installed."
 
     echo "attempting to customize kurl integration test application."
-    if ! kubectl kots set config kurl-integration-test-application --key variable --value installation --deploy ; then
+    if ! kubectl kots set config kurl-integration-test-application --key variable --value installation --deploy --namespace=default ; then
         echo "failed to customize kurl integration test application."
         exit 1
     fi
@@ -551,7 +551,7 @@ function check_and_customize_kurl_integration_test_application() {
     echo "kurl integration test application is running with the previosly customized config."
 
     echo "updating kurl integration test application configuration."
-    if ! kubectl kots set config kurl-integration-test-application --key variable --value upgrade --deploy ; then
+    if ! kubectl kots set config kurl-integration-test-application --key variable --value upgrade --deploy --namespace=default ; then
         echo "failed to update kurl integration test application configuration."
         exit 1
     fi
