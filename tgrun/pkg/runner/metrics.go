@@ -58,7 +58,7 @@ func countRunningVMIs() (int, error) {
 		return 0, errors.Wrap(err, "failed to get clientset")
 	}
 
-	vmiList, err := virtClient.VirtualMachineInstance(Namespace).List(&metav1.ListOptions{})
+	vmiList, err := virtClient.VirtualMachineInstance(Namespace).List(context.TODO(), &metav1.ListOptions{})
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to list vmis")
 	}
