@@ -25,7 +25,7 @@ func CleanUpVMIs() error {
 		return errors.Wrap(err, "failed to get clientset")
 	}
 
-	vmiList, err := virtClient.VirtualMachineInstance(Namespace).List(&metav1.ListOptions{})
+	vmiList, err := virtClient.VirtualMachineInstance(Namespace).List(context.TODO(), &metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to list vmis")
 	}
@@ -34,7 +34,7 @@ func CleanUpVMIs() error {
 		// cleanup succeeded VMIs
 		// leaving them for a few hours for debug cases
 		if vmi.Status.Phase == kubevirtv1.Succeeded && time.Since(vmi.CreationTimestamp.Time).Minutes() > cleanupAfterMinutes {
-			err := virtClient.VirtualMachineInstance(Namespace).Delete(vmi.Name, &metav1.DeleteOptions{})
+			err := virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi.Name, &metav1.DeleteOptions{})
 			if err != nil {
 				fmt.Printf("Failed to delete successful vmi %s: %v\n", vmi.Name, err)
 			} else {
@@ -70,7 +70,7 @@ func CleanUpVMIs() error {
 				}
 			}
 
-			err = virtClient.VirtualMachineInstance(Namespace).Delete(vmi.Name, &metav1.DeleteOptions{})
+			err = virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi.Name, &metav1.DeleteOptions{})
 			if err != nil {
 				fmt.Printf("Failed to delete long-running vmi %s: %v\n", vmi.Name, err)
 			} else {
