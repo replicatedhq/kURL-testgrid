@@ -39,18 +39,20 @@ type OperatingSystemImage struct {
 }
 
 type Instance struct {
-	Name              string                             `json:"name" yaml:"name"`
-	NumPrimaryNodes   int                                `json:"numPrimaryNodes" yaml:"numPrimaryNodes"`
-	NumSecondaryNodes int                                `json:"numSecondaryNodes" yaml:"numSecondaryNodes"`
-	Memory            string                             `json:"memory" yaml:"memory"`
-	CPU               string                             `json:"cpu" yaml:"cpu"`
-	InstallerSpec     kurlv1beta1.InstallerSpec          `json:"installerSpec" yaml:"installerSpec"`
-	Flags             string                             `json:"flags,omitempty" yaml:"flags,omitempty"`
-	UpgradeSpec       *kurlv1beta1.InstallerSpec         `json:"upgradeSpec,omitempty" yaml:"upgradeSpec,omitempty"`
-	SupportbundleSpec *troubleshootv1beta2.SupportBundle `json:"supportbundleSpec,omitempty" yaml:"supportbundleSpec,omitempty"`
-	PreInstallScript  string                             `json:"preInstallScript,omitempty" yaml:"preInstallScript,omitempty"`
-	PostInstallScript string                             `json:"postInstallScript,omitempty" yaml:"postInstallScript,omitempty"`
-	PostUpgradeScript string                             `json:"postUpgradeScript,omitempty" yaml:"postUpgradeScript,omitempty"`
-	Airgap            bool                               `json:"airgap,omitempty" yaml:"airgap,omitempty"`
-	UnsupportedOSIDs  []string                           `json:"unsupportedOSIDs,omitempty" yaml:"unsupportedOSIDs,omitempty"`
+	Name                 string                             `json:"name" yaml:"name"`
+	NumPrimaryNodes      int                                `json:"numPrimaryNodes" yaml:"numPrimaryNodes"`
+	NumSecondaryNodes    int                                `json:"numSecondaryNodes" yaml:"numSecondaryNodes"`
+	Memory               string                             `json:"memory" yaml:"memory"`
+	CPU                  string                             `json:"cpu" yaml:"cpu"`
+	InstallerSpec        kurlv1beta1.InstallerSpec          `json:"installerSpec" yaml:"installerSpec"`
+	InstallerAPIEndpoint string                             `json:"installerApiEndpoint" yaml:"installerApiEndpoint"`
+	Flags                string                             `json:"flags,omitempty" yaml:"flags,omitempty"`
+	UpgradeSpec          *kurlv1beta1.InstallerSpec         `json:"upgradeSpec,omitempty" yaml:"upgradeSpec,omitempty"`
+	UpgradeAPIEndpoint   string                             `json:"upgradeApiEndpoint" yaml:"upgradeApiEndpoint"`
+	SupportbundleSpec    *troubleshootv1beta2.SupportBundle `json:"supportbundleSpec,omitempty" yaml:"supportbundleSpec,omitempty"`
+	PreInstallScript     string                             `json:"preInstallScript,omitempty" yaml:"preInstallScript,omitempty"`
+	PostInstallScript    string                             `json:"postInstallScript,omitempty" yaml:"postInstallScript,omitempty"`
+	PostUpgradeScript    string                             `json:"postUpgradeScript,omitempty" yaml:"postUpgradeScript,omitempty"`
+	Airgap               bool                               `json:"airgap,omitempty" yaml:"airgap,omitempty"`
+	UnsupportedOSIDs     []string                           `json:"unsupportedOSIDs,omitempty" yaml:"unsupportedOSIDs,omitempty"`
 }

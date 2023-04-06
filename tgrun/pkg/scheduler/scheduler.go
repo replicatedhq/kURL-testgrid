@@ -20,6 +20,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	APIEndpointProd    = "https://kurl.sh"
+	APIEndpointStaging = "https://staging.kurl.sh"
+)
+
 var urlRegexp = regexp.MustCompile(`(https?://[\w.-]+)/([\w]+)`)
 
 type kurlErrResp struct {
@@ -67,15 +72,27 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 			return errors.Wrap(err, "failed to marshal json")
 		}
 
-		apiUrl := "https://kurl.sh/installer"
+		installerAPIURL := APIEndpointProd
+		upgradeAPIURL := APIEndpointProd
 		if schedulerOptions.Staging {
-			apiUrl = "https://staging.kurl.sh/installer"
+			installerAPIURL = APIEndpointStaging
+			upgradeAPIURL = APIEndpointStaging
+		}
+		if instance.InstallerAPIEndpoint != "" {
+			installerAPIURL = instance.InstallerAPIEndpoint
+		}
+		if instance.UpgradeAPIEndpoint != "" {
+			upgradeAPIURL = instance.UpgradeAPIEndpoint
 		}
 		if u := os.Getenv("KURL_API_ENDPOINT"); u != "" {
-			apiUrl = fmt.Sprintf("%s/installer", strings.TrimRight(u, "/"))
+			installerAPIURL = u
+			upgradeAPIURL = u
 		}
 
-		req, err := http.NewRequest("POST", apiUrl, bytes.NewReader(installerYAML))
+		installerAPIURL = fmt.Sprintf("%s/installer", strings.TrimRight(installerAPIURL, "/"))
+		upgradeAPIURL = fmt.Sprintf("%s/installer", strings.TrimRight(upgradeAPIURL, "/"))
+
+		req, err := http.NewRequest("POST", installerAPIURL, bytes.NewReader(installerYAML))
 		if err != nil {
 			return errors.Wrap(err, "failed to create request to submit installer spec")
 		}
@@ -105,7 +122,7 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 				return errors.Wrap(err, "failed to marshal upgrade json")
 			}
 
-			req, err := http.NewRequest("POST", apiUrl, bytes.NewReader(upgradeYAML))
+			req, err := http.NewRequest("POST", upgradeAPIURL, bytes.NewReader(upgradeYAML))
 			if err != nil {
 				return errors.Wrap(err, "failed to create request to submit installer upgrade spec")
 			}
