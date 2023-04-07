@@ -482,8 +482,14 @@ EOF
 function install_and_customize_kurl_integration_test_application() {
     echo "attempting to install kurl integration test application."
     local license_path=$(mktemp)
+    # KOTS_INTEGRATION_TEST_APPLICATION_LICENSE is exported by runcmd.sh
     echo "$KOTS_INTEGRATION_TEST_APPLICATION_LICENSE" | base64 -d > $license_path
-    if ! kubectl kots install --license-file=$license_path --namespace=default kurl-integration-test-application/stable ; then
+    local airgap_flag=""
+    # AIRGAP is exported by runcmd.sh
+    if [ "$AIRGAP" = "1" ]; then
+        airgap_flag="--airgap-bundle=$KOTS_INTEGRATION_TEST_APPLICATION_AIRGAP_BUNDLE"
+    fi
+    if ! kubectl kots install --license-file=$license_path --namespace=default kurl-integration-test-application/stable "$airgap_flag" ; then
         rm -rf $license_path
         echo "failed to install kurl integration test application."
         exit 1

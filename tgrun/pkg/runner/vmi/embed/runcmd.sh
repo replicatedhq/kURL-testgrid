@@ -2,10 +2,15 @@
 
 source /opt/kurl-testgrid/common.sh
 
+export AIRGAP
+
+# KOTS_INTEGRATION_TEST_APPLICATION_AIRGAP_BUNDLE is the path to the airgap bundle on the local filesystem
+export KOTS_INTEGRATION_TEST_APPLICATION_AIRGAP_BUNDLE=/opt/kurl-testgrid/kurl-integration-test-application.airgap
+
 function run_install() {
     echo "preparing test at '$(date)'"
 
-    AIRGAP=
+    AIRGAP=0
     if echo "$KURL_URL" | grep -q "\.tar\.gz$" ; then
         AIRGAP=1
     fi
@@ -15,6 +20,9 @@ function run_install() {
 
     if [ "$AIRGAP" = "1" ]; then
         AIRGAP_FLAG=airgap
+
+        echo "downloading kots_integration_test_application airgap bundle"
+        download_kots_integration_test_application_airgap_bundle
 
         echo "downloading install bundle"
 
@@ -73,7 +81,7 @@ function run_install() {
 }
 
 function run_upgrade() {
-    AIRGAP_UPGRADE=
+    AIRGAP_UPGRADE=0
     if echo "$KURL_UPGRADE_URL" | grep -q "\.tar\.gz$" ; then
         AIRGAP_UPGRADE=1
     fi
@@ -501,6 +509,11 @@ function wait_for_cluster_ready() {
         fi
         sleep 60
     done
+}
+
+function download_kots_integration_test_application_airgap_bundle() {
+    local kots_integration_test_application_airgap_bundle="https://kurl-integration-test-application.s3.amazonaws.com/kurl-integration-test-application-0.1.3.airgap"
+    curl -L -o "$KOTS_INTEGRATION_TEST_APPLICATION_AIRGAP_BUNDLE" "$kots_integration_test_application_airgap_bundle"
 }
 
 # change flags from string to array with space as delimiter

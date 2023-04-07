@@ -114,7 +114,7 @@ function wait_for_initprimary_done()
 
 function is_airgap()
 {
-  airgap=0
+  local airgap=0
   if echo "$KURL_URL" | grep -q "\.tar\.gz$" ; then
     airgap=1
   fi
