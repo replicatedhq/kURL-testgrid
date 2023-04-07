@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# KOTS_INTEGRATION_TEST_APPLICATION_LICENSE holds the license we use when deploying our sample
-# application. this license is hardcoded here and has been copied from the vendor portal. we do
-# not deem dangerous the possible leak of this license (for context: the application is just a
+# TESTGRID_KOTS_INTEGRATION_TEST_APPLICATION_LICENSE holds the license we use when deploying our
+# sample application. this license is hardcoded here and has been copied from the vendor portal. we
+# do not deem dangerous the possible leak of this license (for context: the application is just an
 # nginx deployment. to manage this application please visit:
 # https://vendor.replicated.com/apps/kurl-integration-test-application.
-export KOTS_INTEGRATION_TEST_APPLICATION_LICENSE="
+export TESTGRID_KOTS_INTEGRATION_TEST_APPLICATION_LICENSE="
 YXBpVmVyc2lvbjoga290cy5pby92MWJldGExCmtpbmQ6IExpY2Vuc2UKbWV0YWRhdGE6CiAgbmFtZToga3VybGludGVncmF0aW9u
 dGVzdHVzZXIKc3BlYzoKICBhcHBTbHVnOiBrdXJsLWludGVncmF0aW9uLXRlc3QtYXBwbGljYXRpb24KICBjaGFubmVsSUQ6IDJO
 NEd4anRISG5lY3RJMU9WSG9ZVGYyTndtZwogIGNoYW5uZWxOYW1lOiBTdGFibGUKICBjdXN0b21lck5hbWU6IEt1cmwgSW50ZWdy
@@ -482,12 +482,12 @@ EOF
 function install_and_customize_kurl_integration_test_application() {
     echo "attempting to install kurl integration test application."
     local license_path=$(mktemp)
-    # KOTS_INTEGRATION_TEST_APPLICATION_LICENSE is exported by runcmd.sh
-    echo "$KOTS_INTEGRATION_TEST_APPLICATION_LICENSE" | base64 -d > $license_path
+    echo "$TESTGRID_KOTS_INTEGRATION_TEST_APPLICATION_LICENSE" | base64 -d > $license_path
     local airgap_flag=""
-    # AIRGAP is exported by runcmd.sh
-    if [ "$AIRGAP" = "1" ]; then
-        airgap_flag="--airgap-bundle=$KOTS_INTEGRATION_TEST_APPLICATION_AIRGAP_BUNDLE"
+    # TESTGRID_AIRGAP is exported by runcmd.sh
+    if [ "$TESTGRID_AIRGAP" = "1" ]; then
+      # TESTGRID_KOTS_INTEGRATION_TEST_APPLICATION_AIRGAP_BUNDLE is exported by runcmd.sh
+        airgap_flag="--airgap-bundle=$TESTGRID_KOTS_INTEGRATION_TEST_APPLICATION_AIRGAP_BUNDLE"
     fi
     if ! kubectl kots install --license-file=$license_path --namespace=default kurl-integration-test-application/stable "$airgap_flag" ; then
         rm -rf $license_path
