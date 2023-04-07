@@ -17,7 +17,7 @@ function run_install() {
     fi
     AIRGAP_FLAG=
 
-    curl -sSL https://kots.io -H'User-Agent: Replicated_Troubleshoot/v1beta1' > /tmp/support-bundle-spec.yaml
+    curl -fsSL https://kots.io -H'User-Agent: Replicated_Troubleshoot/v1beta1' > /tmp/support-bundle-spec.yaml
 
     if [ "$TESTGRID_AIRGAP" = "1" ]; then
         AIRGAP_FLAG=airgap
@@ -27,11 +27,11 @@ function run_install() {
 
         echo "downloading install bundle"
 
-        curl -sSL -o install.tar.gz "$KURL_URL"
+        curl -fsSL -o install.tar.gz "$KURL_URL"
         if [ -n "$KURL_UPGRADE_URL" ]; then
             echo "downloading upgrade bundle"
 
-            curl -sSL -o upgrade.tar.gz "$KURL_UPGRADE_URL"
+            curl -fsSL -o upgrade.tar.gz "$KURL_UPGRADE_URL"
         fi
 
         disable_internet
