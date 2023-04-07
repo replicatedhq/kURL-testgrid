@@ -508,7 +508,7 @@ function install_and_customize_kurl_integration_test_application() {
     local app_content
     for i in $(seq 1 24); do
         svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
-        app_content=$(curl -s $svc_ip 2>&1)
+        app_content=$(curl -s $svc_ip 2>&1 || true)
         if [ "$app_content" == "installation" ]; then
             break
         fi
@@ -565,7 +565,7 @@ function check_and_customize_kurl_integration_test_application() {
 
     for i in $(seq 1 24); do
         svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
-        app_content=$(curl -s $svc_ip 2>&1)
+        app_content=$(curl -s $svc_ip 2>&1 || true)
         if [ "$app_content" == "upgrade" ]; then
             break
         fi
