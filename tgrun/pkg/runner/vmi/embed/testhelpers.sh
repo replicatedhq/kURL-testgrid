@@ -507,14 +507,17 @@ function install_and_customize_kurl_integration_test_application() {
     local svc_ip
     local app_content
     for i in $(seq 1 24); do
-        svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}')
-        app_content=$(curl -s $svc_ip 2>&1 || true)
-        if [ "$app_content" == "installation" ]; then
-            break
+        if svc_ip=$(kubectl -n default get service nginx | tail -n1 | awk '{ print $3}') ; then
+          app_content=$(curl -s "$svc_ip" 2>&1 || true)
+          if [ "$app_content" == "installation" ]; then
+              break
+          fi
+          echo "attempt $i to read kurl integration test application ($svc_ip) failed, result:"
+          echo "$app_content"
+        else
+          echo "attempt $i to read kurl integration test application failed"
         fi
 
-        echo "attempt $i to read kurl integration test application ($svc_ip) failed, result:"
-        echo $app_content
         sleep 5
     done
 
