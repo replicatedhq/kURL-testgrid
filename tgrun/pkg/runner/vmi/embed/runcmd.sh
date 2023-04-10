@@ -513,7 +513,7 @@ function wait_for_cluster_ready() {
 }
 
 function download_kots_integration_test_application_airgap_bundle() {
-    local kots_integration_test_application_airgap_bundle="https://kurl-integration-test-application.s3.amazonaws.com/kurl-integration-test-application-0.1.3.airgap"
+    local kots_integration_test_application_airgap_bundle="https://kurl-integration-test-application.s3.amazonaws.com/kurl-integration-test-application.airgap"
     curl -L -o "$TESTGRID_KOTS_INTEGRATION_TEST_APPLICATION_AIRGAP_BUNDLE" "$kots_integration_test_application_airgap_bundle"
 }
 
