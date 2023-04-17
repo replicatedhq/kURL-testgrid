@@ -603,3 +603,54 @@ function rhel_9_install_host_packages() {
       yum install -y "${packages[@]}"
     fi
 }
+
+function installer_host() {
+    if echo "$1" | grep -q "staging" ; then
+        echo "staging.kurl.sh"
+    else
+        echo "kurl.sh"
+    fi
+}
+function installer_id() {
+    echo "$1" | awk -F'/' '{ print $NF }' | sed 's/\.tar\.gz//'
+}
+function installer_url() {
+    echo "https://$(installer_host "$1")/$(installer_id "$1")"
+}
+function installer_kubernetes_version() {
+    curl -fsL "$1" | grep -m1 -A1 ' kubernetes:' | grep ' version:' | awk -F': ' '{ print $2 }'
+}
+function installer_kubernets_step_versions() {
+    curl -fsL "$1" | grep -m1 '^STEP_VERSIONS=' | sed 's/STEP_VERSIONS=(//' | sed 's/)//'
+}
+function semver_minor_version() {
+    echo "$1" | sed -E 's/1\.([0-9]+)\.[0-9]+/\1/'
+}
+function kuberentes_step_versions() {
+    local installer_url="$1"
+    local from_version="$2"
+    local to_version="$3"
+    curl -fsL "$installer_url" \
+        | grep -m1 '^STEP_VERSIONS=' \
+        | sed -E 's/^.+1\.'"$(semver_minor_version "$from_version")"'\.[0-9]+ //' \
+        | sed -E 's/(^.+) 1\.'"$(semver_minor_version "$to_version")"'\.[0-9]+ ?.+/\1/' \
+        | sed 's/$/ '"$to_version"'/'
+}
+function kubernetes_step_version_packages() {
+    echo "kubernetes-$(echo "$1" | xargs | sed 's/ /,kubernetes-/g')"
+}
+
+# kuberentes_upgrade_bundle_url given the provided kURL urls, returns the url of the airgap
+# packages bundle to download prior to upgrading multiple kubernetes versions.
+function kuberentes_upgrade_bundle_url() {
+    local kurl_url="$1"
+    local kurl_upgrade_url="$2"
+    local step_versions=
+    step_versions="$(kuberentes_step_versions \
+        "$(installer_url "$kurl_upgrade_url")" \
+        "$(installer_kubernetes_version "$(installer_url "$kurl_url")")" \
+        "$(installer_kubernetes_version "$(installer_url "$kurl_upgrade_url")")")"
+    local step_version_packages=
+    step_version_packages="$(kubernetes_step_version_packages "$step_versions")"
+    echo "https://$(installer_host "$kurl_upgrade_url")/bundle/$(installer_id "$kurl_upgrade_url")/packages/$step_version_packages.tar.gz"
+}
