@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.239
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
-	github.com/lib/pq v1.10.7
+	github.com/lib/pq v1.10.8
 	github.com/pkg/errors v0.9.1
 	github.com/replicatedhq/kurlkinds v1.3.0
 	github.com/replicatedhq/troubleshoot v0.59.0
