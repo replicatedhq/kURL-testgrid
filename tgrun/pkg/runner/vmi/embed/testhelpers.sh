@@ -626,7 +626,7 @@ function installer_kubernets_step_versions() {
 function semver_minor_version() {
     echo "$1" | sed -E 's/1\.([0-9]+)\.[0-9]+/\1/'
 }
-function kuberentes_step_versions() {
+function kubernetes_step_versions() {
     local installer_url="$1"
     local from_version="$2"
     local to_version="$3"
@@ -640,13 +640,13 @@ function kubernetes_step_version_packages() {
     echo "kubernetes-$(echo "$1" | xargs | sed 's/ /,kubernetes-/g')"
 }
 
-# kuberentes_upgrade_bundle_url given the provided kURL urls, returns the url of the airgap
+# kubernetes_upgrade_bundle_url given the provided kURL urls, returns the url of the airgap
 # packages bundle to download prior to upgrading multiple kubernetes versions.
-function kuberentes_upgrade_bundle_url() {
+function kubernetes_upgrade_bundle_url() {
     local kurl_url="$1"
     local kurl_upgrade_url="$2"
     local step_versions=
-    step_versions="$(kuberentes_step_versions \
+    step_versions="$(kubernetes_step_versions \
         "$(installer_url "$kurl_upgrade_url")" \
         "$(installer_kubernetes_version "$(installer_url "$kurl_url")")" \
         "$(installer_kubernetes_version "$(installer_url "$kurl_upgrade_url")")")"
