@@ -633,8 +633,7 @@ function kubernetes_step_versions() {
     curl -fsL "$installer_url" \
         | grep -m1 '^STEP_VERSIONS=' \
         | sed -E 's/^.+1\.'"$(semver_minor_version "$from_version")"'\.[0-9]+ //' \
-        | sed -E 's/(^.+) 1\.'"$(semver_minor_version "$to_version")"'\.[0-9]+ ?.+/\1/' \
-        | sed 's/$/ '"$to_version"'/'
+        | sed -E 's/(^.+) 1\.'"$(semver_minor_version "$to_version")"'\.[0-9]+ ?.+/\1/'
 }
 function kubernetes_step_version_packages() {
     echo "kubernetes-$(echo "$1" | xargs | sed 's/ /,kubernetes-/g')"
