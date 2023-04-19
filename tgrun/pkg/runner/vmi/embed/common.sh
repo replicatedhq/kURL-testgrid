@@ -120,3 +120,32 @@ function is_airgap()
   fi
   echo $airgap
 }
+
+function retry() {
+    local retries=$1
+    shift
+    local count=0
+    until "$@"; do
+        exit_code=$?
+        count=$((count + 1))
+        if [ $count -lt "$retries" ]; then
+            echo "Retry $count/$retries exited $exit_code, retrying in 15 seconds..."
+            sleep 1
+        else
+            echo "Retry $count/$retries exited $exit_code, no more retries left."
+            return $exit_code
+        fi
+    done
+}
+
+function download_and_verify_tarball() {
+    local url=$1
+    local outfile=$2
+    echo "Downloading $url to $outfile"
+    curl -fsSL -o "$outfile" "$url"
+    exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        return $exit_code
+    fi
+    tar -tzf "$outfile" >/dev/null
+}

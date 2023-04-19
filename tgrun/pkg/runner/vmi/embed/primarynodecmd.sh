@@ -12,7 +12,7 @@ function runJoinCommand()
 
 function runAirgapJoinCommand()
 {
-  curl -fsSL -o install.tar.gz "$KURL_URL"
+  retry 5 download_and_verify_tarball "$KURL_URL" install.tar.gz
   tar -xzf install.tar.gz
   joinCommand=$(get_join_command)
   primaryJoin=$(echo "$joinCommand" | sed 's/{.*primaryJoin":"*\([0-9a-zA-Z=]*\)"*,*.*}/\1/' | base64 -d)

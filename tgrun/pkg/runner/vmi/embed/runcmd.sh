@@ -27,11 +27,28 @@ function run_install() {
 
         echo "downloading install bundle"
 
-        curl -fsSL -o install.tar.gz "$KURL_URL"
+        retry 5 download_and_verify_tarball "$KURL_URL" install.tar.gz
+        local exit_status="$?"
+        if [ "$exit_status" -ne 0 ]; then
+            echo "failed to download and verify airgap file with status $exit_status"
+            send_logs
+            report_failure "airgap_download"
+            report_status_update "failed"
+            exit 1
+        fi
+
         if [ -n "$KURL_UPGRADE_URL" ]; then
             echo "downloading upgrade bundle"
 
-            curl -fsSL -o upgrade.tar.gz "$KURL_UPGRADE_URL"
+            retry 5 download_and_verify_tarball "$KURL_UPGRADE_URL" upgrade.tar.gz
+            local exit_status="$?"
+            if [ "$exit_status" -ne 0 ]; then
+                echo "failed to download and verify airgap file with status $exit_status"
+                send_logs
+                report_failure "airgap_download"
+                report_status_update "failed"
+                exit 1
+            fi
         fi
 
         disable_internet
