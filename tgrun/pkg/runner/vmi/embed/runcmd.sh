@@ -71,10 +71,10 @@ function run_install() {
     send_logs
 
     if [ "$NUM_PRIMARY_NODES" -gt 1 ]; then
-        cat install.sh | timeout 30m bash -s $AIRGAP_FLAG ${KURL_FLAGS[@]} ekco-enable-internal-load-balancer
+        cat install.sh | timeout 30m bash -s $AIRGAP_FLAG "$PATCH_FLAG" ${KURL_FLAGS[@]} ekco-enable-internal-load-balancer
         KURL_EXIT_STATUS=$?
     else
-        cat install.sh | timeout 30m bash -s $AIRGAP_FLAG ${KURL_FLAGS[@]}
+        cat install.sh | timeout 30m bash -s $AIRGAP_FLAG "$PATCH_FLAG" ${KURL_FLAGS[@]}
         KURL_EXIT_STATUS=$?
     fi
 
@@ -126,7 +126,7 @@ function run_upgrade() {
     echo "running kurl upgrade at '$(date)'"
     send_logs
 
-    cat install.sh | timeout 60m bash -s $AIRGAP_UPGRADE_FLAG ${KURL_FLAGS[@]}
+    cat install.sh | timeout 60m bash -s $AIRGAP_UPGRADE_FLAG "$PATCH_FLAG" ${KURL_FLAGS[@]}
     KURL_EXIT_STATUS=$?
 
     if [ "$KURL_EXIT_STATUS" -eq 0 ]; then
@@ -144,6 +144,15 @@ function run_upgrade() {
 
     echo "kurl upgrade complete at '$(date)'"
     send_logs
+}
+
+PATCH_FLAG=
+function get_patch_file_flag() {
+    if [ ! -f /opt/kurl-testgrid/patchfile.yaml ] ; then
+        return # file does not exist
+    fi
+
+    PATCH_FLAG="installer-spec-file=/opt/kurl-testgrid/patchfile.yaml"
 }
 
 function run_pre_install_script() {
@@ -549,6 +558,8 @@ function main() {
     create_flags_array
 
     run_pre_install_script
+
+    get_patch_file_flag
 
     run_install
     
