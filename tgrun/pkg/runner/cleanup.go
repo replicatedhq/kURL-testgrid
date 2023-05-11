@@ -16,7 +16,10 @@ import (
 	kubevirtv1 "kubevirt.io/api/core/v1"
 )
 
-const cleanupAfterMinutes = 90
+const (
+	cleanupAfterMinutes = 90
+	timeoutAfterMinutes = 300
+)
 
 // CleanUpVMIs deletes "Succeeded" VMIs
 func CleanUpVMIs() error {
@@ -52,9 +55,10 @@ func CleanUpVMIs() error {
 			}
 		}
 
-		// cleanup VMIs that have not succeeded after 1.5 hours
-		// the in-script timeout for install is 30m, upgrade is 45m
-		if vmi.Status.Phase != kubevirtv1.Succeeded && time.Since(vmi.CreationTimestamp.Time).Minutes() > cleanupAfterMinutes {
+		// cleanup VMIs that are not running and have not succeeded after 1.5 hours (cleanupAfterMinutes)
+		// or VMIs that are running and have not succeeded after 5 hours (timeoutAfterMinutes)
+		// the in-script timeout for install is 30m, upgrade is 180m
+		if cleanupIsTimeout(vmi) {
 			if apiEndpoint := vmi.Annotations[runnerVmi.ApiEndpointAnnotation]; apiEndpoint != "" {
 				url := fmt.Sprintf("%s/v1/instance/%s/finish", apiEndpoint, vmi.Annotations[runnerVmi.TestIDAnnotation])
 				data := `{"success": false, "failureReason": "timeout"}`
@@ -92,6 +96,18 @@ func CleanUpVMIs() error {
 	return nil
 }
 
+// cleanup VMIs that are not running and have not succeeded after 1.5 hours (cleanupAfterMinutes)
+// or VMIs that are running and have not succeeded after 5 hours (timeoutAfterMinutes)
+func cleanupIsTimeout(vmi kubevirtv1.VirtualMachineInstance) bool {
+	if vmi.Status.Phase != kubevirtv1.Running && vmi.Status.Phase != kubevirtv1.Succeeded && time.Since(vmi.CreationTimestamp.Time).Minutes() > cleanupAfterMinutes {
+		return true
+	}
+	if vmi.Status.Phase == kubevirtv1.Running && time.Since(vmi.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes {
+		return true
+	}
+	return false
+}
+
 // CleanUpData cleans stale PV/PVC/Secrets and localpath to reclaim space
 func CleanUpData() error {
 	clientset, err := helpers.GetClientset()
@@ -119,8 +135,8 @@ func cleanupPVCs(clientset *kubernetes.Clientset) error {
 
 	// NOTE: OpenEbs webhook should be absent. For LocalPV volumes it has a bug preventing api calls, the webhook is only needed for cStor.
 	for _, pvc := range pvcs.Items {
-		// clean pvc older then 3 hours
-		if time.Since(pvc.CreationTimestamp.Time).Hours() > 3 {
+		// clean pvc older timeoutAfterMinutes+10 minutes
+		if time.Since(pvc.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+10 {
 			pvc.ObjectMeta.SetFinalizers(nil)
 			p, err := clientset.CoreV1().PersistentVolumeClaims(Namespace).Update(context.TODO(), &pvc, metav1.UpdateOptions{})
 			if err != nil {
@@ -129,8 +145,12 @@ func cleanupPVCs(clientset *kubernetes.Clientset) error {
 				fmt.Printf("Removed finalizers on %s\n", p.Name)
 			}
 
-			clientset.CoreV1().PersistentVolumeClaims(Namespace).Delete(context.TODO(), pvc.Name, metav1.DeleteOptions{})
-			fmt.Printf("Deleted pvc %s\n", pvc.Name)
+			err = clientset.CoreV1().PersistentVolumeClaims(Namespace).Delete(context.TODO(), pvc.Name, metav1.DeleteOptions{})
+			if err != nil {
+				fmt.Printf("Failed to delete pvc %s: %v\n", pvc.Name, err)
+			} else {
+				fmt.Printf("Deleted pvc %s\n", pvc.Name)
+			}
 		}
 	}
 	return nil
@@ -145,14 +165,18 @@ func cleanupPVs(clientset *kubernetes.Clientset) error {
 	// finalizers might get pv in a stack state
 	for _, pv := range pvs.Items {
 		localPath := pv.Spec.Local.Path
-		// deleting PVs older then 4 hours
-		if time.Since(pv.CreationTimestamp.Time).Hours() > 4 && pv.ObjectMeta.DeletionTimestamp == nil {
-			clientset.CoreV1().PersistentVolumes().Delete(context.TODO(), pv.Name, metav1.DeleteOptions{})
-			fmt.Printf("Deleted pv %s\n", pv.Name)
+		// deleting PVs older than timeoutAfterMinutes+20 minutes
+		if time.Since(pv.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+20 && pv.ObjectMeta.DeletionTimestamp == nil {
+			err := clientset.CoreV1().PersistentVolumes().Delete(context.TODO(), pv.Name, metav1.DeleteOptions{})
+			if err != nil {
+				fmt.Printf("Failed to delete pv %s; ERROR: %s\n", pv.Name, err)
+			} else {
+				fmt.Printf("Deleted pv %s\n", pv.Name)
+			}
 			// Image file gets deleted and the space is reclamed on pv deletion
 			// However local directory is left with tmpimage file, removing
 			// 523M    /var/openebs/local/pvc-xxx
-			err := os.RemoveAll(localPath)
+			err = os.RemoveAll(localPath)
 			if err != nil {
 				fmt.Printf("Failed to delete %s; ERROR: %s\n", localPath, err)
 			}
@@ -178,10 +202,14 @@ func cleanupSecrets(clientset *kubernetes.Clientset) error {
 	}
 
 	for _, sec := range secrets.Items {
-		// Delete stale secrets older then 5 hours
-		if strings.HasPrefix(sec.Name, "cloud") && time.Since(sec.CreationTimestamp.Time).Hours() > 5 {
-			clientset.CoreV1().Secrets(Namespace).Delete(context.TODO(), sec.Name, metav1.DeleteOptions{})
-			fmt.Printf("Deleted stale secret %s\n", sec.Name)
+		// Delete stale secrets older than timeoutAfterMinutes+60 minutes
+		if strings.HasPrefix(sec.Name, "cloud") && time.Since(sec.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+60 {
+			err := clientset.CoreV1().Secrets(Namespace).Delete(context.TODO(), sec.Name, metav1.DeleteOptions{})
+			if err != nil {
+				fmt.Printf("Failed to delete secret %s; ERROR: %s\n", sec.Name, err)
+			} else {
+				fmt.Printf("Deleted stale secret %s\n", sec.Name)
+			}
 		}
 	}
 	return nil
