@@ -572,8 +572,6 @@ function main() {
         exit 1
     fi
 
-    run_post_install_script
-
     run_tasks_join_token
     if [ "$(is_airgap)" = "1" ]; then
       store_airgap_command
@@ -583,6 +581,8 @@ function main() {
     send_logs
     report_status_update "joinCommandStored"
     wait_for_cluster_ready
+
+    run_post_install_script
 
     if [ "$KURL_UPGRADE_URL" != "" ]; then
         run_upgrade
