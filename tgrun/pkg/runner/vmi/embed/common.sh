@@ -17,8 +17,8 @@ function ensure_ntp()
 {
     if command_exists "apt-get" ; then
         apt-get update
-        apt-get install -y systemd-timesyncd
-        systemctl start systemd-timesyncd
+        apt-get install -y systemd-timesyncd || true
+        systemctl start systemd-timesyncd || true
     fi
     timedatectl set-ntp true
 }
