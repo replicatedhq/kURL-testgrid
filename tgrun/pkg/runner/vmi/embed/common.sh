@@ -87,8 +87,8 @@ function wait_for_join_commandready()
     echo "join command not ready"
     i=$((i+1))
     # it could take up to 30 minutes to run the initial primary install script
-    # especially for OL which takes about 10 minutes to run centos2ol script
-    if [ $i -gt 30 ]; then
+    # and an additional 10 minutes for OL to run centos2ol script
+    if [ $i -gt 40 ]; then
       echo "wait_for_join_commandready timeout"
       report_status_update "failed"
       send_logs
@@ -114,7 +114,8 @@ function wait_for_initprimary_done()
     fi
     echo "initprimary not ready"
     i=$((i+1))
-    if [ $i -gt 90 ]; then
+    # we give the upgrade 180 minutes to finish plus 30 minutes padding for the cluster to become ready
+    if [ $i -gt 210 ]; then
       echo "wait_for_initprimary_done timeout"
       report_status_update "failed"
       send_logs
