@@ -4,13 +4,23 @@ set -x
 
 function green()
 {
-  text="${1:-}"
-  echo -e "\033[32m$text\033[0m"
+    text="${1:-}"
+    echo -e "\033[32m$text\033[0m"
 }
 
 function command_exists()
 {
     command -v "$@" > /dev/null 2>&1
+}
+
+function ensure_ntp()
+{
+    if command_exists "apt-get" ; then
+        apt-get update
+        apt-get install -y systemd-timesyncd || true
+        systemctl start systemd-timesyncd || true
+    fi
+    timedatectl set-ntp true
 }
 
 function setup_runner()
@@ -31,6 +41,8 @@ function setup_runner()
     echo "OS INFO:"
     cat /etc/*-release
     echo ""
+
+    ensure_ntp
 }
 
 function send_logs()
