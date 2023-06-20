@@ -621,7 +621,7 @@ function installer_kubernetes_version() {
     curl -fsL "$1" | grep -m1 -A1 ' kubernetes:' | grep ' version:' | awk -F': ' '{ print $2 }'
 }
 function installer_kubernets_step_versions() {
-    curl -fsL "$1" | grep -m1 '^STEP_VERSIONS=' | sed 's/STEP_VERSIONS=(//' | sed 's/)//'
+    curl -fsL "$1" | grep -m1 '^STEP_VERSIONS=' | sed 's/STEP_VERSIONS=(//' | sed 's/)//g'
 }
 function semver_minor_version() {
     echo "$1" | sed -E 's/1\.([0-9]+)\.[0-9]+/\1/'
