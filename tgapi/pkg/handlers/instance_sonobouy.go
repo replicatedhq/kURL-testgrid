@@ -3,7 +3,7 @@ package handlers
 import (
 	"bufio"
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -14,7 +14,7 @@ import (
 )
 
 func InstanceSonobuoyResults(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Error(err)
 		JSON(w, 500, nil)

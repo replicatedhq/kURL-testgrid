@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -66,7 +66,7 @@ func UpdateNodeStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func NodeLogs(w http.ResponseWriter, r *http.Request) {
-	logs, err := ioutil.ReadAll(r.Body)
+	logs, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Error(err)
 		JSON(w, 500, nil)
