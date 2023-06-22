@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "terraform-testgrid"
+    bucket = "testgrid-tf-state"
     key    = "testgrid-prod/terraform.tfstate"
     region = "us-east-1"
   }
