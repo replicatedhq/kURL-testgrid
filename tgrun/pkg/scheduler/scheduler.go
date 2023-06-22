@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"os"
@@ -103,7 +103,7 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 		}
 		defer resp.Body.Close()
 
-		installerURL, err := ioutil.ReadAll(resp.Body)
+		installerURL, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Wrap(err, "failed to read response body")
 		}
@@ -133,7 +133,7 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 			}
 			defer upgradeResp.Body.Close()
 
-			upgradeURL, err = ioutil.ReadAll(upgradeResp.Body)
+			upgradeURL, err = io.ReadAll(upgradeResp.Body)
 			if err != nil {
 				return errors.Wrap(err, "failed to read upgrade response body")
 			}
@@ -245,7 +245,7 @@ func getKurlPlans(spec string) ([]types.Instance, error) {
 	}
 
 	if _, err := os.Stat(spec); err == nil {
-		b, err := ioutil.ReadFile(spec)
+		b, err := os.ReadFile(spec)
 		if err != nil {
 			return nil, err
 		}
@@ -269,7 +269,7 @@ func getOses(spec string) ([]types.OperatingSystemImage, error) {
 	var oses []types.OperatingSystemImage
 
 	if _, err := os.Stat(spec); err == nil {
-		b, err := ioutil.ReadFile(spec)
+		b, err := os.ReadFile(spec)
 		if err != nil {
 			return nil, err
 		}

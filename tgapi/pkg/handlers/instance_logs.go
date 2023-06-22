@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -10,7 +10,7 @@ import (
 )
 
 func InstanceLogs(w http.ResponseWriter, r *http.Request) {
-	logs, err := ioutil.ReadAll(r.Body)
+	logs, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Error(err)
 		JSON(w, 500, nil)
