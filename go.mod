@@ -21,7 +21,7 @@ require (
 	k8s.io/apimachinery v0.27.2
 	k8s.io/client-go v0.27.2
 	kubevirt.io/api v0.59.1
-	kubevirt.io/client-go v0.59.1
+	kubevirt.io/client-go v0.59.2
 )
 
 require (
