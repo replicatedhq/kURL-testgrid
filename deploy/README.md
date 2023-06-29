@@ -12,7 +12,7 @@
 3. Under the actions column choose `Copy` which will copy it to your clipboard.
 
 ```bash
-export AWS_PROFILE=replicated-production
+export AWS_PROFILE=replicated-dev
 export METAL_AUTH_TOKEN=<packet-auth-token>
 terrafrom plan
 terraform apply
