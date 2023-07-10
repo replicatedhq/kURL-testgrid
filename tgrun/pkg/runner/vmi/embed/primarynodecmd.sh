@@ -6,6 +6,7 @@ function runJoinCommand()
 {
   joinCommand=$(get_join_command)
   primaryJoin=$(echo "$joinCommand" | sed 's/{.*primaryJoin":"*\([0-9a-zA-Z=]*\)"*,*.*}/\1/' | base64 -d)
+  primaryJoin+=" yes" # assume yes for prompts
   eval $primaryJoin
   KURL_EXIT_STATUS=$?
 }
