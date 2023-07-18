@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -14,6 +15,9 @@ import (
 )
 
 func InstanceSonobuoyResults(w http.ResponseWriter, r *http.Request) {
+	log.Printf("DEBUG: Start %s %s handler", r.Method, r.URL.Path)
+	defer log.Printf("DEBUG: End %s %s handler", r.Method, r.URL.Path)
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Error(err)

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -18,6 +19,9 @@ import (
 
 func InstanceBundle(passpharse string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("DEBUG: Start %s %s handler", r.Method, r.URL.Path)
+		defer log.Printf("DEBUG: End %s %s handler", r.Method, r.URL.Path)
+
 		bucket := os.Getenv("SUPPORT_BUNDLE_BUCKET")
 		if bucket == "" {
 			w.WriteHeader(http.StatusNotImplemented)
@@ -52,6 +56,5 @@ func InstanceBundle(passpharse string) func(http.ResponseWriter, *http.Request) 
 		bundleURL := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", bucket, key)
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(bundleURL + "\n"))
-		return
 	}
 }

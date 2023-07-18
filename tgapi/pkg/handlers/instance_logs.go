@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -10,6 +11,9 @@ import (
 )
 
 func InstanceLogs(w http.ResponseWriter, r *http.Request) {
+	log.Printf("DEBUG: Start %s %s handler", r.Method, r.URL.Path)
+	defer log.Printf("DEBUG: End %s %s handler", r.Method, r.URL.Path)
+
 	logs, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Error(err)
