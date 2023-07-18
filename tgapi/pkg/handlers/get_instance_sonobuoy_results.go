@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -13,6 +14,9 @@ type GetInstanceSonobuoyResultsResponse struct {
 }
 
 func GetInstanceSonobuoyResults(w http.ResponseWriter, r *http.Request) {
+	log.Printf("DEBUG: Start %s %s handler", r.Method, r.URL.Path)
+	defer log.Printf("DEBUG: End %s %s handler", r.Method, r.URL.Path)
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "content-type, origin, accept, authorization")
 
