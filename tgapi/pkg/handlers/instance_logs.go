@@ -11,8 +11,8 @@ import (
 )
 
 func InstanceLogs(w http.ResponseWriter, r *http.Request) {
-	log.Printf("DEBUG: Start %s %s handler", r.Method, r.URL.Path)
-	defer log.Printf("DEBUG: End %s %s handler", r.Method, r.URL.Path)
+	log.Printf("DEBUG: Start %s %s handler %d", r.Method, r.URL.Path, r.ContentLength)
+	defer log.Printf("DEBUG: End %s %s handler %d", r.Method, r.URL.Path, r.ContentLength)
 
 	logs, err := io.ReadAll(r.Body)
 	if err != nil {
