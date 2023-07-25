@@ -179,7 +179,7 @@ function run_post_install_script() {
         return # file does not exist
     fi
 
-    timeout 30m bash -euxo pipefail /opt/kurl-testgrid/postinstall.sh
+    timeout 60m bash -euxo pipefail /opt/kurl-testgrid/postinstall.sh
     local exit_status="$?"
 
     if [ "$exit_status" -ne 0 ]; then
@@ -198,7 +198,7 @@ function run_post_upgrade_script() {
         return # file does not exist
     fi
 
-    timeout 30m bash -euxo pipefail /opt/kurl-testgrid/postupgrade.sh
+    timeout 60m bash -euxo pipefail /opt/kurl-testgrid/postupgrade.sh
     local exit_status="$?"
 
     if [ "$exit_status" -ne 0 ]; then
