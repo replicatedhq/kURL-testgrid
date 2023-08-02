@@ -160,8 +160,8 @@ func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	}
 
 	// wait for there to be enough resources for all nodes before creating them
-	requiredCPU, requiredMemory := requiredResources(singleTest)
-	fmt.Printf("  [waiting for %d CPUs and %dGB to be available]\n", requiredCPU/1000, requiredMemory/1024/1024)
+	requiredCPU, requiredMemory, nodes := requiredResources(singleTest)
+	fmt.Printf("  [waiting for %d CPUs and %dGB to be available for %d nodes]\n", requiredCPU/1000, requiredMemory/1024/1024/1024, nodes)
 	for {
 		availableResources, err := areResourcesAvailable(singleTest)
 		if err != nil {
@@ -218,7 +218,7 @@ func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 
 // determines the total resources used by a test run, and returns the
 // mCPU and kb of memory required
-func requiredResources(singleTest types.SingleRun) (int64, int64) {
+func requiredResources(singleTest types.SingleRun) (int64, int64, int64) {
 	numNodes := int64(0)
 	if singleTest.NumPrimaryNodes == 0 { // there is always at least one primary node
 		numNodes = int64(0) + int64(singleTest.NumSecondaryNodes)
@@ -226,13 +226,55 @@ func requiredResources(singleTest types.SingleRun) (int64, int64) {
 		numNodes = int64(singleTest.NumPrimaryNodes + singleTest.NumSecondaryNodes)
 	}
 
-	testCPU := resource.MustParse(singleTest.CPU)
-	testMemory := resource.MustParse(singleTest.Memory)
+	cpuString := singleTest.CPU
+	if cpuString == "" {
+		cpuString = "4000m"
+	}
+	memoryString := singleTest.Memory
+	if memoryString == "" {
+		memoryString = "16Gi"
+	}
+
+	testCPU := resource.MustParse(cpuString)
+	testMemory := resource.MustParse(memoryString)
 
 	requiredCPUs := numNodes * testCPU.MilliValue()
 	requiredMemory := numNodes * testMemory.Value()
 
-	return requiredCPUs, requiredMemory
+	return requiredCPUs, requiredMemory, numNodes
+}
+
+// usedResources lists the total cpu and memory requested by pods in the cluster
+func usedResouces() (int64, int64) {
+	clientset, err := helpers.GetClientset()
+	if err != nil {
+		log.Println(errors.Wrap(err, "failed to get clientset"))
+		return 0, 0
+	}
+
+	usedCPU := int64(0)
+	usedMemory := int64(0)
+
+	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		log.Println(errors.Wrap(err, "failed to list namespaces"))
+		return 0, 0
+	}
+
+	for _, namespace := range namespaces.Items {
+		pods, err := clientset.CoreV1().Pods(namespace.Name).List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			log.Println(errors.Wrapf(err, "failed to list pods in %s", namespace.Name))
+			return 0, 0
+		}
+
+		for _, pod := range pods.Items {
+			usedCPU += pod.Spec.Containers[0].Resources.Requests.Cpu().MilliValue()
+			usedMemory += pod.Spec.Containers[0].Resources.Requests.Memory().Value()
+		}
+	}
+
+	return usedCPU, usedMemory
 }
 
 // check if we have enough CPU and memory available in the cluster
@@ -256,13 +298,14 @@ func areResourcesAvailable(singleTest types.SingleRun) (bool, error) {
 		availableMemory += node.Status.Allocatable.Memory().Value()
 	}
 
-	requiredCPUs, requiredMemory := requiredResources(singleTest)
+	requiredCPUs, requiredMemory, _ := requiredResources(singleTest)
+	usedCPUs, usedMemory := usedResouces()
 
-	if availableCPUs < requiredCPUs {
+	if availableCPUs-usedCPUs < requiredCPUs {
 		return false, nil
 	}
 
-	if availableMemory < requiredMemory {
+	if availableMemory-usedMemory < requiredMemory {
 		return false, nil
 	}
 	return true, nil
