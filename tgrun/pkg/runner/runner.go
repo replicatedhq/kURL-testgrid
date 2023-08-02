@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,8 +16,12 @@ import (
 
 	"github.com/pkg/errors"
 	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/helpers"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/types"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/vmi"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Run(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
@@ -154,6 +159,21 @@ func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	} else {
 		fmt.Printf("  [using existng image on disk at %s for %s]\n", filepath.Join(tempDir, osImagePath), singleTest.OperatingSystemImage)
 	}
+
+	// wait for there to be enough resources for all nodes before creating them
+	requiredCPU, requiredMemory, nodes := requiredResources(singleTest)
+	fmt.Printf("  [waiting for %d CPUs and %dGB to be available for %d nodes]\n", requiredCPU/1000, requiredMemory/1024/1024/1024, nodes)
+	for {
+		availableResources, err := areResourcesAvailable(singleTest)
+		if err != nil {
+			log.Println(errors.Wrap(err, "failed to check if there are sufficient resources for the cluster"))
+		}
+		if availableResources {
+			break
+		}
+		time.Sleep(sleepTime)
+	}
+
 	// create initial primary node
 	if err = vmi.Create(singleTest, vmi.InitPrimaryNode, vmi.InitPrimaryNode, tempDir, osImagePath, uploadProxyURL); err != nil {
 		return errors.Wrap(err, "failed to create vm for init primary node")
@@ -195,4 +215,103 @@ func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	}
 
 	return nil
+}
+
+// determines the total resources used by a test run, and returns the
+// mCPU and kb of memory required
+func requiredResources(singleTest types.SingleRun) (int64, int64, int64) {
+	numNodes := int64(0)
+	if singleTest.NumPrimaryNodes == 0 { // there is always at least one primary node
+		numNodes = int64(1) + int64(singleTest.NumSecondaryNodes)
+	} else {
+		numNodes = int64(singleTest.NumPrimaryNodes + singleTest.NumSecondaryNodes)
+	}
+
+	cpuString := singleTest.CPU
+	if cpuString == "" {
+		cpuString = "4000m"
+	}
+	memoryString := singleTest.Memory
+	if memoryString == "" {
+		memoryString = "16Gi"
+	}
+
+	testCPU := resource.MustParse(cpuString)
+	testMemory := resource.MustParse(memoryString)
+
+	requiredCPUs := numNodes * testCPU.MilliValue()
+	requiredMemory := numNodes * testMemory.Value()
+
+	return requiredCPUs, requiredMemory, numNodes
+}
+
+// usedResources lists the total cpu and memory requested by pods in the cluster
+func usedResouces() (int64, int64) {
+	clientset, err := helpers.GetClientset()
+	if err != nil {
+		log.Println(errors.Wrap(err, "failed to get clientset"))
+		return 0, 0
+	}
+
+	usedCPU := int64(0)
+	usedMemory := int64(0)
+
+	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		log.Println(errors.Wrap(err, "failed to list namespaces"))
+		return 0, 0
+	}
+
+	for _, namespace := range namespaces.Items {
+		pods, err := clientset.CoreV1().Pods(namespace.Name).List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			log.Println(errors.Wrapf(err, "failed to list pods in %s", namespace.Name))
+			return 0, 0
+		}
+
+		for _, pod := range pods.Items {
+			if pod.Status.Phase != corev1.PodRunning && pod.Status.Phase != corev1.PodPending {
+				continue
+			}
+
+			usedCPU += pod.Spec.Containers[0].Resources.Requests.Cpu().MilliValue()
+			usedMemory += pod.Spec.Containers[0].Resources.Requests.Memory().Value()
+		}
+	}
+
+	return usedCPU, usedMemory
+}
+
+// check if we have enough CPU and memory available in the cluster
+// this would be totalNodeCount * cpu/memory per node
+// we need to check ahead of scheduling so that nodes don't timeout while others have yet to be created
+func areResourcesAvailable(singleTest types.SingleRun) (bool, error) {
+	clientset, err := helpers.GetClientset()
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get clientset")
+	}
+
+	nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to list nodes")
+	}
+
+	availableCPUs := int64(0)
+	availableMemory := int64(0)
+	for _, node := range nodes.Items {
+		availableCPUs += node.Status.Allocatable.Cpu().MilliValue()
+		availableMemory += node.Status.Allocatable.Memory().Value()
+	}
+
+	requiredCPUs, requiredMemory, _ := requiredResources(singleTest)
+	usedCPUs, usedMemory := usedResouces()
+
+	if availableCPUs-usedCPUs < requiredCPUs {
+		return false, nil
+	}
+
+	if availableMemory-usedMemory < requiredMemory {
+		return false, nil
+	}
+	return true, nil
 }

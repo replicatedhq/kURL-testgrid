@@ -1,4 +1,6 @@
-SHELL := /bin/bash
+SHELL := /bin/bash -o pipefail
+CURRENT_USER=$(shell id -u -n)
+
 
 .PHONY: all
 all: fmt vet test build
@@ -30,3 +32,11 @@ build:
 .PHONY: run
 run:
 	./bin/tgrun
+
+ttl-sh:
+	docker build -f Dockerfile \
+		--build-arg gitsha=test \
+		--build-arg buildtime="$(date --rfc-3339=seconds | sed 's/ /T/')" \
+		-t ttl.sh/${CURRENT_USER}/tgrun:12h \
+		..
+	docker push ttl.sh/${CURRENT_USER}/tgrun:12h
