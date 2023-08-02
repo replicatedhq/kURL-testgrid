@@ -19,6 +19,7 @@ import (
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/helpers"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/types"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/vmi"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -221,7 +222,7 @@ func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 func requiredResources(singleTest types.SingleRun) (int64, int64, int64) {
 	numNodes := int64(0)
 	if singleTest.NumPrimaryNodes == 0 { // there is always at least one primary node
-		numNodes = int64(0) + int64(singleTest.NumSecondaryNodes)
+		numNodes = int64(1) + int64(singleTest.NumSecondaryNodes)
 	} else {
 		numNodes = int64(singleTest.NumPrimaryNodes + singleTest.NumSecondaryNodes)
 	}
@@ -269,6 +270,10 @@ func usedResouces() (int64, int64) {
 		}
 
 		for _, pod := range pods.Items {
+			if pod.Status.Phase != corev1.PodRunning && pod.Status.Phase != corev1.PodPending {
+				continue
+			}
+
 			usedCPU += pod.Spec.Containers[0].Resources.Requests.Cpu().MilliValue()
 			usedMemory += pod.Spec.Containers[0].Resources.Requests.Memory().Value()
 		}
