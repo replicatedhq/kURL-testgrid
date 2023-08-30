@@ -469,6 +469,31 @@ func GetNodeJoinCommand(id string) (string, string, error) {
 	return primaryJoin.String, secondaryJoin.String, nil
 }
 
+func AddNodeUpgradeCommand(id string, nodeName string, command string) error {
+	db := persistence.MustGetPGSession()
+	query := `INSERT INTO testupgrade (id, node_name, command) VALUES ($1, $2, $3) ON CONFLICT (id, node_name) DO UPDATE SET command=EXCLUDED.command`
+
+	if _, err := db.Exec(query, id, nodeName, command); err != nil {
+		return errors.Wrap(err, "failed to update")
+	}
+
+	return nil
+}
+
+func GetNodeUpgradeCommand(id, nodeName string) (string, error) {
+	db := persistence.MustGetPGSession()
+
+	query := `select command from testupgrade where id = $1 and node_name = $2`
+	row := db.QueryRow(query, id, nodeName)
+
+	var command sql.NullString
+	if err := row.Scan(&command); err != nil {
+		return "", errors.Wrap(err, "failed to scan")
+	}
+
+	return command.String, nil
+}
+
 func GetRunStatus(id string) (bool, error) {
 	db := persistence.MustGetPGSession()
 

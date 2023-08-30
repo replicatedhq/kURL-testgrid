@@ -1,0 +1,17 @@
+apiVersion: schemas.schemahero.io/v1alpha4
+kind: Table
+metadata:
+  name: testupgrade
+spec:
+  database: testgrid-postgres
+  name: testupgrade
+  schema:
+    postgres:
+      primaryKey: [id, node_name]
+      columns:
+        - name: id
+          type: varchar(255)
+        - name: node_name
+          type: varchar(255)
+        - name: command
+          type: text

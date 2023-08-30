@@ -55,6 +55,8 @@ func RunCmd() *cobra.Command {
 			r.HandleFunc("/v1/instance/{instanceId}/finish", handlers.FinishInstance).Methods("POST")
 			r.HandleFunc("/v1/instance/{instanceId}/join-command", handlers.AddNodeJoinCommand).Methods("POST")
 			r.HandleFunc("/v1/instance/{instanceId}/join-command", handlers.GetNodeJoinCommand).Methods("GET")
+			r.HandleFunc("/v1/instance/{instanceId}/upgrade-command/{nodeName}", handlers.AddNodeUpgradeCommand).Methods("POST")
+			r.HandleFunc("/v1/instance/{instanceId}/upgrade-command/{nodeName}", handlers.GetNodeUpgradeCommand).Methods("GET")
 			r.HandleFunc("/v1/instance/{instanceId}/status", handlers.GetRunStatus).Methods("GET")
 			r.HandleFunc("/v1/instance/{instanceId}/cluster-node", handlers.AddClusterNode).Methods("POST")
 			r.HandleFunc("/v1/instance/{nodeId}/node-status", handlers.UpdateNodeStatus).Methods("PUT")
