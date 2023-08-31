@@ -2,3 +2,4 @@ resources:
   - ./testrun.yaml
   - ./testinstance.yaml
   - ./clusternode.yaml
+  - ./testupgrade.yaml

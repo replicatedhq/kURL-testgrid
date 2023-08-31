@@ -9,19 +9,19 @@ import (
 	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testinstance"
 )
 
-type JoinPrimaryRequest struct {
+type CreateJoinCommandRequest struct {
 	PrimaryJoin   string `json:"primaryJoin"`
 	SecondaryJoin string `json:"secondaryJoin"`
 }
 
-type JoinPrimaryResponse struct {
+type GetJoinCommandResponse struct {
 	PrimaryJoin   string `json:"primaryJoin"`
 	SecondaryJoin string `json:"secondaryJoin"`
 }
 
 func AddNodeJoinCommand(w http.ResponseWriter, r *http.Request) {
-	JoinPrimaryRequest := JoinPrimaryRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&JoinPrimaryRequest); err != nil {
+	joinCommandRequest := CreateJoinCommandRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&joinCommandRequest); err != nil {
 		logger.Error(err)
 		JSON(w, 400, nil)
 		return
@@ -29,7 +29,7 @@ func AddNodeJoinCommand(w http.ResponseWriter, r *http.Request) {
 
 	instanceID := mux.Vars(r)["instanceId"]
 
-	if err := testinstance.AddNodeJoinCommand(instanceID, JoinPrimaryRequest.PrimaryJoin, JoinPrimaryRequest.SecondaryJoin); err != nil {
+	if err := testinstance.AddNodeJoinCommand(instanceID, joinCommandRequest.PrimaryJoin, joinCommandRequest.SecondaryJoin); err != nil {
 		logger.Error(err)
 		JSON(w, 500, nil)
 		return
@@ -47,8 +47,8 @@ func GetNodeJoinCommand(w http.ResponseWriter, r *http.Request) {
 		JSON(w, 500, err)
 		return
 	}
-	JoinPrimaryResponse := JoinPrimaryResponse{}
-	JoinPrimaryResponse.PrimaryJoin = primaryJoin
-	JoinPrimaryResponse.SecondaryJoin = secondaryJoin
-	JSON(w, 200, JoinPrimaryResponse)
+	joinCommandResponse := GetJoinCommandResponse{}
+	joinCommandResponse.PrimaryJoin = primaryJoin
+	joinCommandResponse.SecondaryJoin = secondaryJoin
+	JSON(w, 200, joinCommandResponse)
 }
