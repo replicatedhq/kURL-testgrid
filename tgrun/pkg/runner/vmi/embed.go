@@ -24,3 +24,6 @@ var testHelpers []byte
 
 //go:embed embed/finalizelogs.sh
 var finalizeLogs []byte
+
+//go:embed embed/uploadremotecommands.sh
+var uploadRemoteCommandsSh []byte

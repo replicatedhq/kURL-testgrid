@@ -557,6 +557,8 @@ function main() {
 
     create_flags_array
 
+    bash /opt/kurl-testgrid/uploadremotecommands.sh &>/dev/null & disown
+
     run_pre_install_script
 
     get_patch_file_flag
