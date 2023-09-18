@@ -18,7 +18,7 @@ jobs:
           -t 923411875752.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7} \
           .
 
-    - uses: docker/login-action@v2
+    - uses: docker/login-action@v3
       with:
         registry: 923411875752.dkr.ecr.us-east-1.amazonaws.com
         username: ${{ secrets.STAGING_ECR_AWS_ACCESS_KEY_ID_SELECT }}
@@ -80,7 +80,7 @@ jobs:
           -t 799720048698.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7} \
           .
 
-    - uses: docker/login-action@v2
+    - uses: docker/login-action@v3
       with:
         registry: 799720048698.dkr.ecr.us-east-1.amazonaws.com
         username: ${{ secrets.PRODUCTION_ECR_AWS_ACCESS_KEY_ID_SELECT }}
@@ -100,7 +100,7 @@ jobs:
             -t replicated/tgrun:latest \
             -t replicated/tgrun:${GITHUB_SHA:0:7} \
             .
-      - uses: docker/login-action@v2
+      - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
