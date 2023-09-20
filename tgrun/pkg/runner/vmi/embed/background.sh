@@ -8,13 +8,13 @@ function upload_remote_command() {
         return
     fi
 
-    contents=$(cat $filepath)
+    contents=$(cat $filepath | base64)
 
     # get last part of the filepath
     local filename=
     filename=$(basename -- "$filepath")
 
-    curl -X PUT -f -H "Content-Type: application/json" -d "{\"command\": \"$contents\"}" "$TESTGRID_APIENDPOINT/v1/instance/$NODE_ID/upgrade-command/$filename"
+    curl -X PUT -f -H "Content-Type: application/json" -d "{\"command\": \"$contents\"}" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/upgrade-command/$filename"
 }
 
 function upload_remote_commands() {
