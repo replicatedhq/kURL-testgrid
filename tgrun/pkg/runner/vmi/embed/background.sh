@@ -15,6 +15,7 @@ function upload_remote_command() {
     filename=$(basename -- "$filepath")
 
     curl -X PUT -f -H "Content-Type: application/json" -d "{\"command\": \"$contents\"}" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/upgrade-command/$filename"
+    send_logs
 }
 
 function upload_remote_commands() {
@@ -30,6 +31,7 @@ function upload_remote_commands() {
 function main()
 {
     source /opt/kurl-testgrid/vars.sh
+    source /opt/kurl-testgrid/common.sh
     upload_remote_commands
 }
 
