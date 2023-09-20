@@ -70,11 +70,18 @@ function get_join_command()
   echo "${joinCommand}"
 }
 
+function upgrade_command_endpoint()
+{
+  node_name=
+  node_name=$(hostname)
+  echo "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/upgrade-command/$node_name"
+}
+
 function get_upgrade_command()
 {
   local node_name=
   node_name=$(hostname)
-  upgradeCommandResponse=$(curl -X GET -f "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/upgrade-command/$node_name")
+  upgradeCommandResponse=$(curl -X GET -f "$(upgrade_command_endpoint)")
   command=$(echo "$upgradeCommandResponse" | sed 's/{.*command":"*\([0-9a-zA-Z=]*\)"*,*.*}/\1/' | base64 -d)
 
   # if the file 'upgrade-command' exists, compare its contents with what we just pulled from the API
@@ -123,6 +130,8 @@ function wait_for_join_commandready()
 
 function wait_for_initprimary_done()
 {
+  echo "waiting for initprimary to finish or upgrade command to be ready at $(upgrade_command_endpoint)"
+  send_logs
   i=0
   while true; do
     primaryNodeStatus=$(get_initprimary_status)
