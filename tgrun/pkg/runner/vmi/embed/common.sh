@@ -70,6 +70,36 @@ function get_join_command()
   echo "${joinCommand}"
 }
 
+function upgrade_command_endpoint()
+{
+  node_name=
+  node_name=$(hostname)
+  echo "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/upgrade-command/$node_name"
+}
+
+function get_upgrade_command()
+{
+  local node_name=
+  node_name=$(hostname)
+  upgradeCommandResponse=$(curl -X GET -f "$(upgrade_command_endpoint)")
+  command=$(echo "$upgradeCommandResponse" | sed 's/{.*command":"*\([0-9a-zA-Z=]*\)"*,*.*}/\1/' | base64 -d)
+
+  # if the file 'upgrade-command' exists, compare its contents with what we just pulled from the API
+  # if they are the same, then we have already run this command and we should not run it again
+  if [ -f ./node-upgrade-command ]; then
+    local existing_command=
+    existing_command=$(cat ./node-upgrade-command)
+    if [ "$existing_command" = "$command" ]; then
+      return 0
+    fi
+  fi
+
+  # write the command to a file so we can compare it next time
+  echo "$command" > ./node-upgrade-command
+
+  echo "${command}"
+}
+
 function wait_for_join_commandready()
 {
   i=0
@@ -100,6 +130,8 @@ function wait_for_join_commandready()
 
 function wait_for_initprimary_done()
 {
+  echo "waiting for initprimary to finish or upgrade command to be ready at $(upgrade_command_endpoint)"
+  send_logs
   i=0
   while true; do
     primaryNodeStatus=$(get_initprimary_status)
@@ -121,6 +153,21 @@ function wait_for_initprimary_done()
       send_logs
       exit 1
     fi
+
+    upgrade_command=$(get_upgrade_command)
+    if [ -n "$upgrade_command" ]; then
+      echo "upgrade command is ready"
+      upgrade_command+=" yes" # assume yes for prompts
+      eval "$upgrade_command"
+      if [ $? -ne 0 ]; then
+        echo "upgrade command failed"
+        report_status_update "failed"
+        send_logs
+        exit 1
+      fi
+      send_logs
+    fi
+
     sleep 60
   done
 }

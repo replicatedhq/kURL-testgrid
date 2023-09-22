@@ -235,6 +235,10 @@ function collect_debug_info_after_kurl() {
     echo "node descriptions after completion:";
     kubectl describe nodes || true
     echo "";
+
+    echo "background logs"
+    cat /var/log/background-worker.log
+    echo ""
 }
 
 function remove_first_element()
@@ -556,6 +560,8 @@ function main() {
     report_status_update "running"
 
     create_flags_array
+
+    bash /opt/kurl-testgrid/background.sh &>/dev/null & disown
 
     run_pre_install_script
 

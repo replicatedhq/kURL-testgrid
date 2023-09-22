@@ -223,6 +223,7 @@ export NODE_ID='%s'
 		max(singleTest.NumPrimaryNodes, 1),
 		nodeId,
 	)
+	backgroundShB64 := base64.StdEncoding.EncodeToString(backgroundSh)
 
 	varsB64 := base64.StdEncoding.EncodeToString([]byte(varsSh))
 
@@ -245,6 +246,7 @@ runcmd:
   - [ bash, -c, 'echo %s | base64 -d > /opt/kurl-testgrid/runcmd.sh' ]
   - [ bash, -c, 'echo %s | base64 -d > /opt/kurl-testgrid/mainscript.sh' ]
   - [ bash, -c, 'echo %s | base64 -d > /opt/kurl-testgrid/testhelpers.sh' ]
+  - [ bash, -c, 'echo %s | base64 -d > /opt/kurl-testgrid/background.sh' ]
   - [ bash, -c, '[ %d -eq 0 ] || echo %s | base64 -d > /opt/kurl-testgrid/preinstall.sh' ]
   - [ bash, -c, '[ %d -eq 0 ] || echo %s | base64 -d > /opt/kurl-testgrid/postinstall.sh' ]
   - [ bash, -c, '[ %d -eq 0 ] || echo %s | base64 -d > /opt/kurl-testgrid/postupgrade.sh' ]
@@ -262,6 +264,7 @@ power_state:
 		runcmdB64,
 		mainScriptB64,
 		testHelpersB64,
+		backgroundShB64,
 		len(singleTest.PreInstallScript),
 		preInstallB64,
 		len(singleTest.PostInstallScript),
