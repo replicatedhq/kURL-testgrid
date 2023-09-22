@@ -27,7 +27,7 @@ function upload_remote_commands() {
     do
            touch  ./lastwatch
            sleep 10
-           find /var/lib/kurl/remotes/onenode -cnewer ./lastwatch -exec bash -c "upload_remote_command \$0" {} \;
+           find /var/lib/kurl/remotes -cnewer ./lastwatch -exec bash -c "upload_remote_command \$0" {} \;
     done
 }
 
