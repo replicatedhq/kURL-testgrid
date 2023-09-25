@@ -157,7 +157,6 @@ function wait_for_initprimary_done()
     upgrade_command=$(get_upgrade_command)
     if [ -n "$upgrade_command" ]; then
       echo "upgrade command is ready"
-      upgrade_command+=" yes" # assume yes for prompts
       eval "$upgrade_command"
       if [ $? -ne 0 ]; then
         echo "upgrade command failed"
