@@ -256,15 +256,13 @@ function remove_last_element()
 }
 
 function store_join_command() {
-    joincommand=$(cat tasks.sh | sudo bash -s join_token $AIRGAP_FLAG ha)
+    cat tasks.sh | sudo bash -s join_token $AIRGAP_FLAG ha | tee /tmp/joincommand
 
-    # get just the lines containing the join command(s)
+    # first, grep for join.sh - this will  get just the lines containing the join command(s)
     # this will include 'color' characters that need to be stripped, which the sed command then deletes
-    scriptLines=$(echo $joincommand | grep "join.sh" | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g')
-
-    # separate the primary and secondary join commands - primary will contain 'control-plane'
-    primaryJoinLine=$(echo $scriptLines | grep "control-plane")
-    secondaryJoinLine=$(echo $scriptLines | grep -v "control-plane")
+    # we then separate the primary and secondary join commands - primary will contain 'control-plane'
+    primaryJoinLine=$(cat /tmp/joincommand | grep "join.sh" | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' | grep "control-plane")
+    secondaryJoinLine=$(cat /tmp/joincommand | grep "join.sh" | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' | grep -v "control-plane")
 
     primaryJoin=$(echo $primaryJoinLine | base64 | tr -d '\n' )
     secondaryJoin=$(echo $secondaryJoinLine | base64 | tr -d '\n' )
@@ -532,6 +530,8 @@ function create_flags_array() {
 function main() {
     
     curl -X POST "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/running"
+    echo "running test $TEST_ID on runner $HOST_RUNNER"
+
     setup_runner
  
     report_status_update "running"
