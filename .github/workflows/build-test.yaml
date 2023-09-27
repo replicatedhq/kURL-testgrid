@@ -17,7 +17,7 @@ jobs:
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
         shell: bash
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - run: go mod tidy
 
@@ -34,7 +34,7 @@ jobs:
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
       shell: bash
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - run: make -C tgapi test
 
@@ -51,7 +51,7 @@ jobs:
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
       shell: bash
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - run: make -C tgrun test
 
@@ -63,14 +63,14 @@ jobs:
       with:
         node-version: '14'
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - run: make -C web deps build-staging
 
   docker-image-tgapi:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: tgapi-build
         run: |
           docker build -f tgapi/deploy/Dockerfile \
@@ -82,7 +82,7 @@ jobs:
   docker-image-tgrun:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: tgrun-build
         run: |
           docker build -f tgrun/Dockerfile \
