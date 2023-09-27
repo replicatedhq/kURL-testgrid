@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -200,6 +201,10 @@ func createSecret(singleTest types.SingleRun, nodeName string) error {
 	commonShB64 := base64.StdEncoding.EncodeToString(commonSh)
 	mainScriptB64 := base64.StdEncoding.EncodeToString(mainscript)
 	testHelpersB64 := base64.StdEncoding.EncodeToString(testHelpers)
+	hostRunner, err := os.Hostname()
+	if err != nil {
+		return fmt.Errorf("failed to get hostname: %w", err)
+	}
 	varsSh := fmt.Sprintf(`
 export TESTGRID_APIENDPOINT='%s'
 export TEST_ID='%s'
@@ -211,6 +216,7 @@ export OS_NAME='%s'
 export NUM_NODES='%d'
 export NUM_PRIMARY_NODES='%d'
 export NODE_ID='%s'
+export HOST_RUNNER='%s'
 `,
 		singleTest.TestGridAPIEndpoint,
 		singleTest.ID,
@@ -222,6 +228,7 @@ export NODE_ID='%s'
 		max(singleTest.NumPrimaryNodes+singleTest.NumSecondaryNodes, 1),
 		max(singleTest.NumPrimaryNodes, 1),
 		nodeId,
+		hostRunner,
 	)
 	backgroundShB64 := base64.StdEncoding.EncodeToString(backgroundSh)
 
