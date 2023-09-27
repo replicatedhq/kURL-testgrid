@@ -66,8 +66,7 @@ function get_initprimary_status()
 
 function get_join_command()
 {
-  joinCommand=$(curl -X GET -f "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/join-command")
-  echo "${joinCommand}"
+  cat ./joincommand
 }
 
 function upgrade_command_endpoint()
@@ -106,8 +105,13 @@ function wait_for_join_commandready()
   while true; do
     primaryNodeStatus=$(get_initprimary_status)
     if [[ "$primaryNodeStatus" = "joinCommandStored" ]] ; then
-      echo "join command is ready"
-      break
+      # download the join command - if it fails to download, we will try again
+      if curl -X GET -o ./joincommand -f "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/join-command"; then
+        echo "join command is ready"
+        break
+      else
+        echo "failed to download join command, retrying"
+      fi
     elif [[ "$primaryNodeStatus" = "failed" ]] ; then
       echo "primaryNodeStatus failed"
       report_status_update "failed"
