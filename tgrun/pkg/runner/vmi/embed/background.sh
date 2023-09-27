@@ -23,11 +23,19 @@ function upload_remote_command() {
 
 function upload_remote_commands() {
     export -f upload_remote_command
+    i=1
     while true
     do
            touch  ./lastwatch
            sleep 10
            find /var/lib/kurl/remotes -cnewer ./lastwatch -exec bash -c "upload_remote_command \$0" {} \;
+
+           # every 12th loop (2 minutes), send logs
+           i=$((i+1))
+           if [ $i -eq 12 ]; then
+               i=1
+               send_logs
+           fi
     done
 }
 
