@@ -286,6 +286,10 @@ func usedResouces() (int64, int64) {
 // this would be totalNodeCount * cpu/memory per node
 // we need to check ahead of scheduling so that nodes don't timeout while others have yet to be created
 func areResourcesAvailable(singleTest types.SingleRun) (bool, error) {
+	if (singleTest.NumPrimaryNodes == 0 || singleTest.NumPrimaryNodes == 1) && singleTest.NumSecondaryNodes == 0 {
+		return true, nil // it's fine for a single node to be scheduled without starting, as there's no other nodes to time out waiting for it
+	}
+
 	clientset, err := helpers.GetClientset()
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get clientset")
