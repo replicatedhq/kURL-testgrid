@@ -227,7 +227,7 @@ export HOST_RUNNER_VERSION='%s'
 		singleTest.UpgradeURL,
 		singleTest.SupportbundleYAML,
 		singleTest.OperatingSystemName,
-		max(singleTest.NumPrimaryNodes+singleTest.NumSecondaryNodes, 1),
+		max(singleTest.NumPrimaryNodes, 1)+singleTest.NumSecondaryNodes,
 		max(singleTest.NumPrimaryNodes, 1),
 		nodeId,
 		hostRunner,
