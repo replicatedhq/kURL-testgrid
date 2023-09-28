@@ -18,6 +18,7 @@ import (
 	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/helpers"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/types"
+	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/version"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -217,6 +218,7 @@ export NUM_NODES='%d'
 export NUM_PRIMARY_NODES='%d'
 export NODE_ID='%s'
 export HOST_RUNNER='%s'
+export HOST_RUNNER_VERSION='%s'
 `,
 		singleTest.TestGridAPIEndpoint,
 		singleTest.ID,
@@ -229,6 +231,7 @@ export HOST_RUNNER='%s'
 		max(singleTest.NumPrimaryNodes, 1),
 		nodeId,
 		hostRunner,
+		version.String(),
 	)
 	backgroundShB64 := base64.StdEncoding.EncodeToString(backgroundSh)
 

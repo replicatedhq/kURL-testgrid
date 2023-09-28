@@ -530,7 +530,7 @@ function create_flags_array() {
 function main() {
     
     curl -X POST "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/running"
-    echo "running test $TEST_ID on runner $HOST_RUNNER"
+    echo "running test $TEST_ID on runner $HOST_RUNNER with $HOST_RUNNER_VERSION"
 
     setup_runner
  
