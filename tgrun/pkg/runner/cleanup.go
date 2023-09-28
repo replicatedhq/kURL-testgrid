@@ -53,6 +53,28 @@ func CleanUpVMIs() error {
 					fmt.Printf("Sent logs for successful vmi %s\n", vmi.Name)
 				}
 			}
+		} else if vmi.Status.Phase == kubevirtv1.Succeeded && strings.HasSuffix(vmi.Name, "-initialprimary") {
+			// cleanup secondary nodes if the primary has been done for 10 minutes
+
+			completedAt := time.Time{}
+			for _, condition := range vmi.Status.PhaseTransitionTimestamps {
+				if condition.Phase == kubevirtv1.Succeeded {
+					completedAt = condition.PhaseTransitionTimestamp.Time
+				}
+			}
+			if time.Since(completedAt).Minutes() > 10 {
+				vmiPrefix := strings.TrimSuffix(vmi.Name, "-initialprimary")
+				for _, vmi2 := range vmiList.Items {
+					if strings.HasPrefix(vmi2.Name, vmiPrefix) && vmi.Status.Phase == kubevirtv1.Running {
+						err := virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi2.Name, &metav1.DeleteOptions{})
+						if err != nil {
+							fmt.Printf("Failed to delete secondary vmi %s: %v\n", vmi.Name, err)
+						} else {
+							fmt.Printf("Delete secondary vmi %s\n", vmi.Name)
+						}
+					}
+				}
+			}
 		}
 
 		// cleanup VMIs that are not running and have not succeeded after 1.5 hours (cleanupAfterMinutes)
