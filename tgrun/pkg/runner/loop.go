@@ -32,17 +32,22 @@ func MainRunLoop(runnerOptions types.RunnerOptions) error {
 	}
 	defer os.RemoveAll(tempDir)
 
-	for {
-		if err := CleanUpVMIs(); err != nil {
-			fmt.Println("VMI clean up ERROR: ", err)
+	go func() {
+		for {
+			if err := CleanUpVMIs(); err != nil {
+				fmt.Println("VMI clean up ERROR: ", err)
+			}
+			if err := CleanUpData(); err != nil {
+				fmt.Println("PV clean up ERROR: ", err)
+			}
+			if err := ReportMetrics(runnerOptions); err != nil {
+				fmt.Println("Metrics reporting ERROR: ", err)
+			}
+			time.Sleep(sleepTime)
 		}
-		if err := CleanUpData(); err != nil {
-			fmt.Println("PV clean up ERROR: ", err)
-		}
-		if err := ReportMetrics(runnerOptions); err != nil {
-			fmt.Println("Metrics reporting ERROR: ", err)
-		}
+	}()
 
+	for {
 		canSchedule, err := canScheduleNewVM()
 		if err != nil {
 			return errors.Wrap(err, "failed to check if can schedule")
