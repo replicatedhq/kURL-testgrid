@@ -67,6 +67,10 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 			Spec: testSpec,
 		}
 
+		if installer.Spec.Kurl != nil && installer.Spec.Kurl.HostPreflights != nil {
+			installer.Spec.Kurl.HostPreflights.APIVersion = "troubleshoot.sh/v1beta2"
+		}
+
 		installerYAML, err := json.Marshal(installer)
 		if err != nil {
 			return errors.Wrap(err, "failed to marshal json")
@@ -111,6 +115,10 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 		var upgradeYAML, upgradeURL []byte
 		if instance.UpgradeSpec != nil {
 			installer.Spec = *instance.UpgradeSpec
+
+			if installer.Spec.Kurl != nil && installer.Spec.Kurl.HostPreflights != nil {
+				installer.Spec.Kurl.HostPreflights.APIVersion = "troubleshoot.sh/v1beta2"
+			}
 
 			// append sonobuoy for conformance testing
 			if installer.Spec.Sonobuoy == nil || installer.Spec.Sonobuoy.Version == "" {
