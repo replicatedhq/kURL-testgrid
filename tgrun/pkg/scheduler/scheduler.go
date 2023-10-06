@@ -16,8 +16,8 @@ import (
 	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/scheduler/types"
 	kurlv1beta1 "github.com/replicatedhq/kurlkinds/pkg/apis/cluster/v1beta1"
-	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -67,10 +67,6 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 			Spec: testSpec,
 		}
 
-		if installer.Spec.Kurl != nil && installer.Spec.Kurl.HostPreflights != nil {
-			installer.Spec.Kurl.HostPreflights.APIVersion = "troubleshoot.sh/v1beta2"
-		}
-
 		installerYAML, err := json.Marshal(installer)
 		if err != nil {
 			return errors.Wrap(err, "failed to marshal json")
@@ -115,10 +111,6 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 		var upgradeYAML, upgradeURL []byte
 		if instance.UpgradeSpec != nil {
 			installer.Spec = *instance.UpgradeSpec
-
-			if installer.Spec.Kurl != nil && installer.Spec.Kurl.HostPreflights != nil {
-				installer.Spec.Kurl.HostPreflights.APIVersion = "troubleshoot.sh/v1beta2"
-			}
 
 			// append sonobuoy for conformance testing
 			if installer.Spec.Sonobuoy == nil || installer.Spec.Sonobuoy.Version == "" {
