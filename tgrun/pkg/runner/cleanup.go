@@ -18,7 +18,7 @@ import (
 
 const (
 	cleanupAfterMinutes = 90
-	timeoutAfterMinutes = 300
+	timeoutAfterMinutes = 480
 )
 
 // CleanUpVMIs deletes "Succeeded" VMIs
@@ -119,7 +119,7 @@ func CleanUpVMIs() error {
 }
 
 // cleanup VMIs that are not running and have not succeeded after 1.5 hours (cleanupAfterMinutes)
-// or VMIs that are running and have not succeeded after 5 hours (timeoutAfterMinutes)
+// or VMIs that are running and have not succeeded after 8 hours (timeoutAfterMinutes)
 func cleanupIsTimeout(vmi kubevirtv1.VirtualMachineInstance) bool {
 	if vmi.Status.Phase != kubevirtv1.Running && vmi.Status.Phase != kubevirtv1.Succeeded && time.Since(vmi.CreationTimestamp.Time).Minutes() > cleanupAfterMinutes {
 		return true
@@ -216,7 +216,7 @@ func cleanupPVs(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
-// CleanUpSecrets removes stale cloud-init configurations stored in secrets and prevents errors on interupted runs
+// CleanUpSecrets removes stale cloud-init configurations stored in secrets and prevents errors on interrupted runs
 func cleanupSecrets(clientset *kubernetes.Clientset) error {
 	secrets, err := clientset.CoreV1().Secrets(Namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
