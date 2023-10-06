@@ -16,8 +16,8 @@ import (
 	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/scheduler/types"
 	kurlv1beta1 "github.com/replicatedhq/kurlkinds/pkg/apis/cluster/v1beta1"
-	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 )
 
 const (
