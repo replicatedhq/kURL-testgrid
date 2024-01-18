@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.3
-FROM node:14-stretch-slim as builder
+FROM node:18-bookworm-slim as builder
 WORKDIR /src
 ARG OKTETO_NAMESPACE
 
