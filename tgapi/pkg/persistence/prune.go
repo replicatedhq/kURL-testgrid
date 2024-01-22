@@ -27,7 +27,7 @@ func PrunePG(pg *sql.DB, pruneDuration time.Duration) (int, int, error) {
 
 	runDeleteQuery := `
 DELETE FROM testrun 
-WHERE ref = any (array(SELECT ref FROM testrun WHERE enqueued_at < $1 ORDER BY enqueued_at LIMIT 1000))`
+WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY created_at LIMIT 1000))`
 	result, err := pg.Exec(runDeleteQuery, deleteBefore)
 	if err != nil {
 		return -1, -1, fmt.Errorf("error deleting testrun entries: %v", err)
