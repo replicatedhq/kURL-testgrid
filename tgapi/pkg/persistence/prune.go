@@ -68,6 +68,7 @@ WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY cr
 	if err != nil {
 		return -1, -1, fmt.Errorf("error getting rows affected after deleting testupgrade entries: %v", err)
 	}
+	deletedRows += int(deleted)
 
 	return prunedRows, deletedRows, nil
 }
