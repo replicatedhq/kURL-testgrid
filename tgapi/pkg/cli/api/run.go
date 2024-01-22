@@ -92,6 +92,15 @@ func RunCmd() *cobra.Command {
 
 			go metrics.PollTestStats()
 
+			go func() {
+				pruned, deleted, err := persistence.PrunePG(time.Hour * 24 * 60)
+				if err != nil {
+					log.Printf("Failed to prune postgres: %v", err)
+				} else {
+					log.Printf("Successfully pruned postgres, pruned %d and deleted %d rows", pruned, deleted)
+				}
+			}()
+
 			log.Fatal(srv.ListenAndServe())
 
 			return nil
