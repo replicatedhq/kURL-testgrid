@@ -94,6 +94,7 @@ func RunCmd() *cobra.Command {
 
 			go func() {
 				pg := persistence.MustGetPGSession()
+				log.Printf("Starting to prune postgres")
 				pruned, deleted, err := persistence.PrunePG(pg, time.Hour*24*60)
 				if err != nil {
 					log.Printf("Failed to prune postgres: %v", err)
