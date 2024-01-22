@@ -9,7 +9,7 @@ spec:
     postgres:
       primaryKey: [id, node_name]
       indexes:
-        - name: idx_id
+        - name: idx_testupgrade_id
           columns:
             - id
       columns:

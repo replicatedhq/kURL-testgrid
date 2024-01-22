@@ -13,7 +13,7 @@ spec:
           columns:
             - priority desc
             - enqueued_at asc
-        - name: idx_testrun_ref
+        - name: idx_testinstance_testrun_ref
           columns:
             - testrun_ref
       columns:

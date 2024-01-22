@@ -9,7 +9,7 @@ spec:
     postgres:
       primaryKey: [id]
       indexes:
-        - name: idx_testinstance_id
+        - name: idx_clusternode_testinstance_id
           columns:
             - testinstance_id
       columns:
