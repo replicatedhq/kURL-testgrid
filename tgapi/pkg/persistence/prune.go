@@ -1,13 +1,12 @@
 package persistence
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 )
 
-func PrunePG(pruneDuration time.Duration) (int, int, error) {
-	pg := MustGetPGSession()
-
+func PrunePG(pg *sql.DB, pruneDuration time.Duration) (int, int, error) {
 	deletedRows := 0
 	prunedRows := 0
 
