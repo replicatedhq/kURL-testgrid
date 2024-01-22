@@ -35,8 +35,7 @@ func PrunePG(pruneDuration time.Duration) (int, int, error) {
 	}
 	prunedRows += int(pruned)
 
-	// delete test runs/upgrades/nodes that do not have a matching testinstance
-	result, err = pg.Exec("DELETE FROM testrun WHERE ref NOT IN (SELECT id FROM testinstance)")
+	result, err = pg.Exec("DELETE FROM testrun WHERE timestamp < $1", deleteBefore)
 	if err != nil {
 		return -1, -1, fmt.Errorf("error deleting testrun entries: %v", err)
 	}
@@ -46,6 +45,7 @@ func PrunePG(pruneDuration time.Duration) (int, int, error) {
 	}
 	deletedRows += int(deleted)
 
+	// delete test upgrades/nodes that do not have a matching testinstance
 	result, err = pg.Exec("DELETE FROM clusternode WHERE testinstance_id NOT IN (SELECT id FROM testinstance)")
 	if err != nil {
 		return -1, -1, fmt.Errorf("error deleting clusternode entries: %v", err)
