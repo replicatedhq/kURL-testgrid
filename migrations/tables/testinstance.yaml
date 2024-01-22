@@ -13,6 +13,9 @@ spec:
           columns:
             - priority desc
             - enqueued_at asc
+        - name: idx_testinstance_testrun_ref
+          columns:
+            - testrun_ref
       columns:
         - name: id
           type: varchar(255)

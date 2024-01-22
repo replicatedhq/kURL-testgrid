@@ -3,6 +3,7 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -37,6 +38,7 @@ WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY cr
 		return -1, -1, fmt.Errorf("error getting rows affected after deleting testrun entries: %v", err)
 	}
 	deletedRows += int(deleted)
+	log.Printf("Deleted %d testrun entries", deleted)
 
 	// delete test runs that do not have a matching testrun
 	result, err = pg.Exec("DELETE FROM testinstance WHERE testrun_ref NOT IN (SELECT ref FROM testrun)")
@@ -48,6 +50,7 @@ WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY cr
 		return -1, -1, fmt.Errorf("error getting rows affected after deleting testinstance entries: %v", err)
 	}
 	deletedRows += int(deleted)
+	log.Printf("Deleted %d testinstance entries", deleted)
 
 	// delete test upgrades/nodes that do not have a matching testinstance
 	result, err = pg.Exec("DELETE FROM clusternode WHERE testinstance_id NOT IN (SELECT id FROM testinstance)")
@@ -59,6 +62,7 @@ WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY cr
 		return -1, -1, fmt.Errorf("error getting rows affected after deleting clusternode entries: %v", err)
 	}
 	deletedRows += int(deleted)
+	log.Printf("Deleted %d clusternode entries", deleted)
 
 	result, err = pg.Exec("DELETE FROM testupgrade WHERE id NOT IN (SELECT id FROM testinstance)")
 	if err != nil {
@@ -68,6 +72,8 @@ WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY cr
 	if err != nil {
 		return -1, -1, fmt.Errorf("error getting rows affected after deleting testupgrade entries: %v", err)
 	}
+	deletedRows += int(deleted)
+	log.Printf("Deleted %d testupgrade entries", deleted)
 
 	return prunedRows, deletedRows, nil
 }

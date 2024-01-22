@@ -8,6 +8,10 @@ spec:
   schema:
     postgres:
       primaryKey: [id]
+      indexes:
+        - name: idx_clusternode_testinstance_id
+          columns:
+            - testinstance_id
       columns:
         - name: id
           type: varchar(255)

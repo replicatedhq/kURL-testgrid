@@ -8,6 +8,10 @@ spec:
   schema:
     postgres:
       primaryKey: [id, node_name]
+      indexes:
+        - name: idx_testupgrade_id
+          columns:
+            - id
       columns:
         - name: id
           type: varchar(255)
