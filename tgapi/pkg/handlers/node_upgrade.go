@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -43,6 +45,10 @@ func GetNodeUpgradeCommand(w http.ResponseWriter, r *http.Request) {
 
 	command, err := testinstance.GetNodeUpgradeCommand(instanceID, nodeName)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			JSON(w, 404, nil)
+			return
+		}
 		logger.Error(err)
 		JSON(w, 500, err)
 		return

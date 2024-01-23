@@ -40,8 +40,8 @@ WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY cr
 	deletedRows += int(deleted)
 	log.Printf("Deleted %d testrun entries", deleted)
 
-	// delete test runs that do not have a matching testrun
-	result, err = pg.Exec("DELETE FROM testinstance WHERE testrun_ref NOT IN (SELECT ref FROM testrun)")
+	// delete test instances that do not have a matching testrun
+	result, err = pg.Exec("DELETE FROM testinstance WHERE NOT EXISTS (SELECT FROM testrun WHERE testinstance.testrun_ref = testrun.ref)")
 	if err != nil {
 		return -1, -1, fmt.Errorf("error deleting testinstance entries: %v", err)
 	}
@@ -53,7 +53,7 @@ WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY cr
 	log.Printf("Deleted %d testinstance entries", deleted)
 
 	// delete test upgrades/nodes that do not have a matching testinstance
-	result, err = pg.Exec("DELETE FROM clusternode WHERE testinstance_id NOT IN (SELECT id FROM testinstance)")
+	result, err = pg.Exec("DELETE FROM clusternode WHERE NOT EXISTS (SELECT FROM testinstance WHERE clusternode.testinstance_id = testinstance.id)")
 	if err != nil {
 		return -1, -1, fmt.Errorf("error deleting clusternode entries: %v", err)
 	}
@@ -64,7 +64,7 @@ WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY cr
 	deletedRows += int(deleted)
 	log.Printf("Deleted %d clusternode entries", deleted)
 
-	result, err = pg.Exec("DELETE FROM testupgrade WHERE id NOT IN (SELECT id FROM testinstance)")
+	result, err = pg.Exec("DELETE FROM testupgrade WHERE NOT EXISTS (SELECT FROM testinstance WHERE testupgrade.id = testinstance.id)")
 	if err != nil {
 		return -1, -1, fmt.Errorf("error deleting testupgrade entries: %v", err)
 	}
