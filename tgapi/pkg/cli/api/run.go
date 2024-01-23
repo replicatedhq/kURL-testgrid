@@ -93,13 +93,20 @@ func RunCmd() *cobra.Command {
 			go metrics.PollTestStats()
 
 			go func() {
-				pg := persistence.MustGetPGSession()
-				log.Printf("Starting to prune postgres")
-				pruned, deleted, err := persistence.PrunePG(pg, time.Hour*24*60)
-				if err != nil {
-					log.Printf("Failed to prune postgres: %v", err)
-				} else {
-					log.Printf("Successfully pruned postgres, pruned %d and deleted %d rows", pruned, deleted)
+				for {
+					pg := persistence.MustGetPGSession()
+					log.Printf("Starting to prune postgres")
+					pruned, deleted, err := persistence.PrunePG(pg, time.Hour*24*60)
+					if err != nil {
+						log.Printf("Failed to prune postgres: %v", err)
+					} else {
+						log.Printf("Successfully pruned postgres, pruned %d and deleted %d rows", pruned, deleted)
+					}
+
+					// sleep for 24 hours plus or minus 30 minutes
+					sleepDuration := time.Hour*23 + time.Minute*30
+					sleepDuration += time.Second * time.Duration(rand.Int63n(60*60))
+					time.Sleep(sleepDuration)
 				}
 			}()
 
