@@ -52,28 +52,29 @@ WHERE ref = any (array(SELECT ref FROM testrun WHERE created_at < $1 ORDER BY cr
 	deletedRows += int(deleted)
 	log.Printf("Deleted %d testinstance entries", deleted)
 
-	// delete test upgrades/nodes that do not have a matching testinstance
-	result, err = pg.Exec("DELETE FROM clusternode WHERE NOT EXISTS (SELECT FROM testinstance WHERE clusternode.testinstance_id = testinstance.id)")
-	if err != nil {
-		return -1, -1, fmt.Errorf("error deleting clusternode entries: %v", err)
-	}
-	deleted, err = result.RowsAffected()
-	if err != nil {
-		return -1, -1, fmt.Errorf("error getting rows affected after deleting clusternode entries: %v", err)
-	}
-	deletedRows += int(deleted)
-	log.Printf("Deleted %d clusternode entries", deleted)
-
-	result, err = pg.Exec("DELETE FROM testupgrade WHERE NOT EXISTS (SELECT FROM testinstance WHERE testupgrade.id = testinstance.id)")
-	if err != nil {
-		return -1, -1, fmt.Errorf("error deleting testupgrade entries: %v", err)
-	}
-	deleted, err = result.RowsAffected()
-	if err != nil {
-		return -1, -1, fmt.Errorf("error getting rows affected after deleting testupgrade entries: %v", err)
-	}
-	deletedRows += int(deleted)
-	log.Printf("Deleted %d testupgrade entries", deleted)
+	// TODO: reenable these deletion jobs at some point in the future when we are sure that the DB is in a good state
+	//// delete test upgrades/nodes that do not have a matching testinstance
+	//result, err = pg.Exec("DELETE FROM clusternode WHERE NOT EXISTS (SELECT FROM testinstance WHERE clusternode.testinstance_id = testinstance.id)")
+	//if err != nil {
+	//	return -1, -1, fmt.Errorf("error deleting clusternode entries: %v", err)
+	//}
+	//deleted, err = result.RowsAffected()
+	//if err != nil {
+	//	return -1, -1, fmt.Errorf("error getting rows affected after deleting clusternode entries: %v", err)
+	//}
+	//deletedRows += int(deleted)
+	//log.Printf("Deleted %d clusternode entries", deleted)
+	//
+	//result, err = pg.Exec("DELETE FROM testupgrade WHERE NOT EXISTS (SELECT FROM testinstance WHERE testupgrade.id = testinstance.id)")
+	//if err != nil {
+	//	return -1, -1, fmt.Errorf("error deleting testupgrade entries: %v", err)
+	//}
+	//deleted, err = result.RowsAffected()
+	//if err != nil {
+	//	return -1, -1, fmt.Errorf("error getting rows affected after deleting testupgrade entries: %v", err)
+	//}
+	//deletedRows += int(deleted)
+	//log.Printf("Deleted %d testupgrade entries", deleted)
 
 	return prunedRows, deletedRows, nil
 }
