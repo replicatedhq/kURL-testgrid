@@ -4,9 +4,9 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 4.5.0"
     }
-    metal = {
-      source = "equinix/metal"
-      version = "3.1.0"
+    equinix = {
+      source = "equinix/equinix"
+      version = "1.34.0"
     }
   }
   required_version = ">= 1.0.0"
