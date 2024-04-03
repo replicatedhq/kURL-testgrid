@@ -10,11 +10,11 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "metal_device" "device" {
+resource "equinix_metal_device" "device" {
   count = var.device_count
 
   project_id       = var.project_id
-  facilities       = var.region
+  metro            = var.region[count.index]
   hostname         = "${var.tg_hostname}-${count.index}"
   billing_cycle    = "hourly"
   operating_system = var.tg_os
@@ -24,6 +24,6 @@ resource "metal_device" "device" {
 }
 
 output "device_ids" {
-  value = metal_device.device.*.id
+  value = equinix_metal_device.device.*.id
 }
 
