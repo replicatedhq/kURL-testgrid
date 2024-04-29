@@ -5,7 +5,7 @@ go 1.19
 require (
 	filippo.io/age v1.1.1
 	github.com/DataDog/datadog-go v4.8.3+incompatible
-	github.com/aws/aws-sdk-go v1.50.15
+	github.com/aws/aws-sdk-go v1.51.30
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
