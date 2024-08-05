@@ -1,6 +1,6 @@
 module github.com/replicatedhq/kurl-testgrid
 
-go 1.22.0
+go 1.22.5
 
 require (
 	filippo.io/age v1.1.1
