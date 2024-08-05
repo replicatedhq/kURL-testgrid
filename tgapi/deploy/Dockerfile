@@ -1,4 +1,4 @@
-FROM golang:1.19
+FROM golang:1.22
 
 ADD ./go.* /go/src/github.com/replicatedhq/kurl-testgrid/
 ADD ./tgapi /go/src/github.com/replicatedhq/kurl-testgrid/tgapi
@@ -17,7 +17,7 @@ RUN go build -o ./bin/tgapi \
     ./cmd/api
 
 
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates git \
     && rm -rf /var/lib/apt/lists/*
