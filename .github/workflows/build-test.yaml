@@ -26,8 +26,8 @@ jobs:
     needs: validate-go-mod
     steps:
     - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
+      with:
+        go-version-file: go.mod
     - name: setup env
       run: |
         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
@@ -43,8 +43,8 @@ jobs:
     needs: validate-go-mod
     steps:
     - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
+      with:
+        go-version-file: go.mod
     - name: setup env
       run: |
         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
