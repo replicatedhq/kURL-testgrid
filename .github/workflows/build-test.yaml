@@ -7,7 +7,9 @@ jobs:
   validate-go-mod:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
 
@@ -17,15 +19,15 @@ jobs:
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
         shell: bash
 
-      - uses: actions/checkout@v4
-
       - run: go mod tidy
 
   test-tgapi:
     runs-on: ubuntu-20.04
     needs: validate-go-mod
     steps:
-    - uses: actions/setup-go@v5
+    - uses: actions/checkout@v4
+    - name: Setup Go
+      uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
     - name: setup env
@@ -33,8 +35,6 @@ jobs:
         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
       shell: bash
-
-    - uses: actions/checkout@v4
 
     - run: make -C tgapi test
 
@@ -42,7 +42,9 @@ jobs:
     runs-on: ubuntu-20.04
     needs: validate-go-mod
     steps:
-    - uses: actions/setup-go@v5
+    - uses: actions/checkout@v4
+    - name: Setup Go
+      uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
     - name: setup env
@@ -50,8 +52,6 @@ jobs:
         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
       shell: bash
-
-    - uses: actions/checkout@v4
 
     - run: make -C tgrun test
 
