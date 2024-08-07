@@ -108,6 +108,13 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 			return errors.Wrap(err, "failed to read response body")
 		}
 
+		// attempt to unmarshal installerURL as a kurl error message - if this works, it's not a URL
+		var errMsg kurlErrResp
+		err = json.Unmarshal(installerURL, &errMsg)
+		if err == nil && errMsg.Error.Message != "" {
+			return fmt.Errorf("error getting kurl spec url for instance %s: %s", instance.Name, errMsg.Error.Message)
+		}
+
 		var upgradeYAML, upgradeURL []byte
 		if instance.UpgradeSpec != nil {
 			installer.Spec = *instance.UpgradeSpec
@@ -138,6 +145,12 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 				return errors.Wrap(err, "failed to read upgrade response body")
 			}
 
+			// attempt to unmarshal upgradeURL as a kurl error message - if this works, it's not a URL
+			err = json.Unmarshal(upgradeURL, &errMsg)
+			if err == nil && errMsg.Error.Message != "" {
+				return fmt.Errorf("error getting kurl upgrade spec url for instance %s: %s", instance.Name, errMsg.Error.Message)
+			}
+
 			if instance.Airgap || schedulerOptions.Airgap {
 				upgradeURLString, err := getBundleFromURL(string(upgradeURL), schedulerOptions.KurlVersion)
 				if err != nil {
@@ -160,13 +173,6 @@ func Run(schedulerOptions types.SchedulerOptions) error {
 			if err != nil {
 				return errors.Wrap(err, "failed to marshal support bundle json")
 			}
-		}
-
-		// attempt to unmarshal installerURL as a kurl error message - if this works, it's not a URL
-		var errMsg kurlErrResp
-		err = json.Unmarshal(installerURL, &errMsg)
-		if err == nil && errMsg.Error.Message != "" {
-			return fmt.Errorf("error getting kurl spec url: %s", errMsg.Error.Message)
 		}
 
 		if instance.Airgap || schedulerOptions.Airgap {
