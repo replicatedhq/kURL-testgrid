@@ -482,15 +482,15 @@ function report_success() {
     local failure="$1"
 
     if [ -n "$failure" ]; then
-        curl -X POST -d "{\"success\": true, \"failureReason\": \"${failure}\"}" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/finish"
+        retry 5 curl -X POST -d "{\"success\": true, \"failureReason\": \"${failure}\"}" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/finish"
     else
-        curl -X POST -d '{"success": true}' "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/finish"
+        retry 5 curl -X POST -d '{"success": true}' "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/finish"
     fi
 }
 
 function report_failure() {
     local failure="$1"
-    curl -X POST -d "{\"success\": false, \"failureReason\": \"${failure}\"}" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/finish"
+    retry 5 curl -X POST -d "{\"success\": false, \"failureReason\": \"${failure}\"}" "$TESTGRID_APIENDPOINT/v1/instance/$TEST_ID/finish"
 }
 
 function wait_for_cluster_ready() {
