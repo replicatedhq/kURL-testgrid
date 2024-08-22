@@ -603,7 +603,7 @@ function is_amazon_2023() {
             return 0
         fi
     fi
-    return 0
+    return 1
 }
 
 # is_ubuntu_2404 returns 0 if the current distro is Ubuntu 24.04.
@@ -613,7 +613,7 @@ function is_ubuntu_2404() {
             return 0
         fi
     fi
-    return 0
+    return 1
 }
 
 function rhel_9_install_host_packages() {
