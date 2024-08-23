@@ -632,7 +632,7 @@ function amazon_2023_install_host_packages() {
     fi
 }
 
-function ubuntu_2024_install_host_packages() {
+function ubuntu_2404_install_host_packages() {
     local packages=("$@")
     if is_ubuntu_2404 ; then
       # install required host packages
