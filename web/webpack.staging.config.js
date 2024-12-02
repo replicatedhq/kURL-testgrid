@@ -23,11 +23,11 @@ module.exports = {
   },
 
   plugins: [
-    new BundleAnalyzerPlugin({
-      analyzerMode: "disabled",
-      generateStatsFile: true,
-      statsOptions: { source: false }
-    }),
+    // new BundleAnalyzerPlugin({
+    //   analyzerMode: "disabled",
+    //   generateStatsFile: true,
+    //   statsOptions: { source: false }
+    // }),
   ],
 
   optimization: {
