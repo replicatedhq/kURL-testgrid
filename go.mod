@@ -3,7 +3,7 @@ module github.com/replicatedhq/kurl-testgrid
 go 1.22.5
 
 require (
-	filippo.io/age v1.2.0
+	filippo.io/age v1.2.1
 	github.com/DataDog/datadog-go v4.8.3+incompatible
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/gorilla/handlers v1.5.2
