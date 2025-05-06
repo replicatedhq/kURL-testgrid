@@ -39,7 +39,7 @@
     "screen": "^0.2.10",
     "source-map-loader": "^5.0.0",
     "style-loader": "^4.0.0",
-    "ts-loader": "^9.5.1",
+    "ts-loader": "^9.5.2",
     "typescript": "^5.5.4",
     "url-loader": "^4.1.1",
     "webpack": "^5.94.0",
