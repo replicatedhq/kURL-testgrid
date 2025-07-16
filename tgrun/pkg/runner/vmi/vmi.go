@@ -391,7 +391,7 @@ func createK8sNode(singleTest types.SingleRun, nodeName string) error {
 		},
 	}
 
-	_, err = virtClient.VirtualMachineInstance("default").Create(context.TODO(), &vmi)
+	_, err = virtClient.VirtualMachineInstance("default").Create(context.TODO(), &vmi, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create VMI %s: %w", name, err)
 	}
@@ -477,7 +477,7 @@ func createSendlogsNode(nodeID string) error {
 		},
 	}
 
-	_, err = virtClient.VirtualMachineInstance("default").Create(context.TODO(), &vmi)
+	_, err = virtClient.VirtualMachineInstance("default").Create(context.TODO(), &vmi, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create VMI %s: %w", fmt.Sprintf("%s-sendlogs", nodeID), err)
 	}

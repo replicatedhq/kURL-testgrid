@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/crypto"
@@ -39,14 +39,14 @@ func InstanceBundle(passpharse string) func(http.ResponseWriter, *http.Request) 
 		defer encrypted.Close()
 
 		key := fmt.Sprintf("%s-%d/bundle.tgz.age", instanceID, time.Now().Unix())
-		input := &s3manager.UploadInput{
-			Body:   aws.ReadSeekCloser(encrypted),
+		input := &s3.PutObjectInput{
+			Body:   encrypted,
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 		}
 
 		s3Uploader := persistence.GetS3Uploader()
-		_, err = s3Uploader.UploadWithContext(context.Background(), input)
+		_, err = s3Uploader.Upload(context.Background(), input)
 		if err != nil {
 			logger.Error(errors.Errorf("Failed to upload bundle to s3 for instance %s: %v", instanceID, err))
 			w.WriteHeader(http.StatusInternalServerError)
