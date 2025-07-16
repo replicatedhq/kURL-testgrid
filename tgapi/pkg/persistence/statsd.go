@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DataDog/datadog-go/statsd"
+	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -32,12 +32,13 @@ func InitStatsd(port, namespace string) (*statsd.Client, error) {
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to find instance ip")
 			}
-			c, err := statsd.New(fmt.Sprintf("%s:%s", ip, port))
+			c, err := statsd.New(fmt.Sprintf("%s:%s", ip, port),
+				// prefix every metric with the app name
+				statsd.WithNamespace(namespace),
+			)
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to init statsd client targeting ip %s", ip)
 			}
-			// prefix every metric with the app name
-			c.Namespace = namespace
 			statsdClient = c
 		}
 	}
