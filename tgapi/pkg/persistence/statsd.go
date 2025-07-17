@@ -1,14 +1,15 @@
 package persistence
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
 
-	"github.com/DataDog/datadog-go/statsd"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/DataDog/datadog-go/v5/statsd"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/pkg/errors"
 )
 
@@ -24,20 +25,21 @@ func InitStatsd(port, namespace string) (*statsd.Client, error) {
 	defer statsdMu.Unlock()
 
 	if statsdClient == nil {
-		sess, err := session.NewSession(aws.NewConfig())
+		cfg, err := config.LoadDefaultConfig(context.TODO())
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to init AWS session")
+			return nil, errors.Wrap(err, "failed to init AWS config")
 		} else {
-			ip, err := getInstancePrivateIP(sess)
+			ip, err := getInstancePrivateIP(cfg)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to find instance ip")
 			}
-			c, err := statsd.New(fmt.Sprintf("%s:%s", ip, port))
+			c, err := statsd.New(fmt.Sprintf("%s:%s", ip, port),
+				// prefix every metric with the app name
+				statsd.WithNamespace(namespace),
+			)
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to init statsd client targeting ip %s", ip)
 			}
-			// prefix every metric with the app name
-			c.Namespace = namespace
 			statsdClient = c
 		}
 	}
@@ -64,11 +66,11 @@ func MaybeSendStatsdGauge(name string, value float64, tags []string, rate float6
 	return client.Gauge(name, value, tags, rate)
 }
 
-func getInstancePrivateIP(sess *session.Session) (string, error) {
-	ec2metadataSvc := ec2metadata.New(sess)
-	doc, err := ec2metadataSvc.GetInstanceIdentityDocument()
+func getInstancePrivateIP(cfg aws.Config) (string, error) {
+	imdsClient := imds.NewFromConfig(cfg)
+	result, err := imdsClient.GetInstanceIdentityDocument(context.TODO(), &imds.GetInstanceIdentityDocumentInput{})
 	if err != nil {
 		return "", err
 	}
-	return doc.PrivateIP, nil
+	return result.InstanceIdentityDocument.PrivateIP, nil
 }

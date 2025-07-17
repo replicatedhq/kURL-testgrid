@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/persistence"
 	"github.com/replicatedhq/kurl-testgrid/tgapi/pkg/testinstance/types"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 const testInstanceFields = `id, test_id, test_name, testrun_ref, kurl_yaml, kurl_url, kurl_flags, upgrade_yaml, ` +

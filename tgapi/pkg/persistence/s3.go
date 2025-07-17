@@ -1,33 +1,42 @@
 package persistence
 
 import (
+	"context"
 	"sync"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-var s3Client *s3.S3
-var s3UploadManager *s3manager.Uploader
+var s3Client *s3.Client
+var s3UploadManager *manager.Uploader
 var s3Mu sync.Mutex
 
-func GetS3Client() *s3.S3 {
+func GetS3Client() *s3.Client {
 	s3Mu.Lock()
 	defer s3Mu.Unlock()
 
 	if s3Client == nil {
-		s3Client = s3.New(session.New())
+		cfg, err := config.LoadDefaultConfig(context.TODO())
+		if err != nil {
+			panic(err)
+		}
+		s3Client = s3.NewFromConfig(cfg)
 	}
 	return s3Client
 }
 
-func GetS3Uploader() *s3manager.Uploader {
+func GetS3Uploader() *manager.Uploader {
 	s3Mu.Lock()
 	defer s3Mu.Unlock()
 
 	if s3UploadManager == nil {
-		s3UploadManager = s3manager.NewUploader(session.New())
+		cfg, err := config.LoadDefaultConfig(context.TODO())
+		if err != nil {
+			panic(err)
+		}
+		s3UploadManager = manager.NewUploader(s3.NewFromConfig(cfg))
 	}
 	return s3UploadManager
 }

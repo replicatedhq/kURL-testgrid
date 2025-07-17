@@ -1,0 +1,57 @@
+build:
+  tgdb:
+    context: migrations
+    dockerfile: migrations/fixtures/deploy/Dockerfile
+    image: okteto.dev/kurl-tgdb:${OKTETO_GIT_COMMIT}
+  tgmigrations:
+    context: migrations
+    dockerfile: migrations/Dockerfile.okteto
+    image: okteto.dev/kurl-tgmigrations:${OKTETO_GIT_COMMIT}
+  tgapi:
+    context: .
+    dockerfile: tgapi/Dockerfile.okteto
+    image: okteto.dev/kurl-tgapi:${OKTETO_GIT_COMMIT}
+  tgweb:
+    context: web
+    dockerfile: web/Dockerfile.okteto
+    image: okteto.dev/kurl-tgweb:${OKTETO_GIT_COMMIT}
+    args:
+      OKTETO_NAMESPACE: ${OKTETO_NAMESPACE}
+  tgweb-dev:
+    context: web
+    dockerfile: web/Dockerfile.dev.okteto
+    image: okteto.dev/kurl-tgweb:${OKTETO_NAMESPACE}
+
+deploy:
+  - cd kustomize/overlays/okteto && kustomize edit set image tgdb=okteto.dev/kurl-tgdb:${OKTETO_GIT_COMMIT}
+  - cd kustomize/overlays/okteto && kustomize edit set image tgmigrations=okteto.dev/kurl-tgmigrations:${OKTETO_GIT_COMMIT}
+  - cd kustomize/overlays/okteto && kustomize edit set image tgapi=okteto.dev/kurl-tgapi:${OKTETO_GIT_COMMIT}
+  - cd kustomize/overlays/okteto && kustomize edit set image tgweb=okteto.dev/kurl-tgweb:${OKTETO_GIT_COMMIT}
+
+  - kustomize build kustomize/overlays/okteto
+  - kubectl apply -k kustomize/overlays/okteto
+
+dev:
+  testgrid-web:
+    command: bash
+    image: okteto.dev/kurl-tgweb:${OKTETO_NAMESPACE}
+    workdir: /src
+    sync:
+      - .:/src
+    resources:
+      limits:
+        cpu: "2"
+        memory: 4Gi
+    persistentVolume:
+      enabled: true
+  tgapi:
+    command: bash
+    workdir: /go/src/github.com/replicatedhq/kurl-testgrid/tgapi
+    sync:
+      - ../:/go/src/github.com/replicatedhq/kurl-testgrid
+    resources:
+      limits:
+        cpu: "2"
+        memory: 4Gi
+    forward:
+      - 2350:2345
