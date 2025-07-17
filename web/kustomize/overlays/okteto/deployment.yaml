@@ -9,4 +9,4 @@ spec:
         - name: testgrid-web
           ports:
             - name: http
-              containerPort: 30881
+              containerPort: 8080
