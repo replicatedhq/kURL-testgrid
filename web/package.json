@@ -9,7 +9,7 @@
     "Marc Campbell <marc.e.campbell@gmail.com>"
   ],
   "scripts": {
-    "start": "cross-env NODE_OPTIONS=--max-old-space-size=4096 webpack serve --config webpack.config.js --progress --color --env development"
+    "start": "cross-env NODE_OPTIONS=--max-old-space-size=4096 webpack serve --config webpack.config.js --progress --color --env ${NODE_ENV:-development}"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.8",

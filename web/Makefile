@@ -17,7 +17,13 @@ lint:
 	npx eslint ./src --ext .js,.jsx,.ts,.tsx
 
 .PHONY: serve
+serve: export NODE_ENV = development
 serve:
+	npm start
+
+.PHONY: serve-okteto
+serve-okteto: export NODE_ENV = okteto
+serve-okteto:
 	npm start
 
 .PHONY: build

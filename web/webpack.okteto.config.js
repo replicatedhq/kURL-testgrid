@@ -1,5 +1,4 @@
 var path = require("path");
-const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 var srcPath = path.join(__dirname, "src");
 var distPath = path.join(__dirname, "dist");
