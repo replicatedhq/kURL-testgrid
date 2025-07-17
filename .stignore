@@ -16,3 +16,7 @@ vendor
 
 # dlv binary
 __debug_bin
+
+# exclude some directories from syncing to dev envs for the go project
+migrations
+web
