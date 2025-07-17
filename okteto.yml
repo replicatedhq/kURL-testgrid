@@ -44,8 +44,10 @@ dev:
     command: bash
     workdir: /go/src/github.com/replicatedhq/kurl-testgrid/tgapi
     sync:
-      folders:
-        - ./tgapi:/go/src/github.com/replicatedhq/kurl-testgrid/tgapi
+      - ./go.mod:/go/src/github.com/replicatedhq/kurl-testgrid/go.mod
+      - ./go.sum:/go/src/github.com/replicatedhq/kurl-testgrid/go.sum
+      - ./tgapi:/go/src/github.com/replicatedhq/kurl-testgrid/tgapi
+      - ./tgrun:/go/src/github.com/replicatedhq/kurl-testgrid/tgrun
     resources:
       limits:
         cpu: "2"
