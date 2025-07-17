@@ -32,7 +32,7 @@ deploy:
   - kubectl apply -k kustomize/overlays/okteto
 
 dev:
-  tgweb:
+  testgrid-web:
     command: bash
     image: okteto.dev/kurl-tgweb:${OKTETO_NAMESPACE}
     workdir: /src
