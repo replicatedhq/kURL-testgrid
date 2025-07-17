@@ -19,5 +19,6 @@ __debug_bin
 
 # exclude some directories from syncing to dev envs for the go project
 migrations
+tgapi/bin
 tgrun/bin
 web
