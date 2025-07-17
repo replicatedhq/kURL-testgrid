@@ -1,5 +1,4 @@
 var path = require("path");
-const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 var srcPath = path.join(__dirname, "src");
 var distPath = path.join(__dirname, "dist");
@@ -38,5 +37,23 @@ module.exports = {
     filename: "testgrid.js",
   },
 
-  devtool: "eval-source-map"
+  devtool: "eval-source-map",
+
+  devServer: {
+    port: 8080,
+    host: "0.0.0.0",
+    hot: "only",
+    historyApiFallback: {
+      verbose: true,
+      rewrites: [
+        {
+          from: /^\/run\/.*$/,
+          to: function() {
+            return '/index.html';
+          }
+        }
+      ]
+    },
+    allowedHosts: "all",
+  },
 };
