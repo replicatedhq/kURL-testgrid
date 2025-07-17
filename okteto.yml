@@ -32,7 +32,8 @@ dev:
     image: ${OKTETO_BUILD_TGWEB_DEV_IMAGE}
     workdir: /src
     sync:
-      - .:/src
+      folders:
+        - ./web:/src
     resources:
       limits:
         cpu: "2"
