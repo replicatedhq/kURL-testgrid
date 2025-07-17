@@ -6,5 +6,5 @@ ADD Makefile ./
 RUN make deps
 COPY . .
 
-EXPOSE 30881
+EXPOSE 8080
 ENTRYPOINT ["make", "serve"]

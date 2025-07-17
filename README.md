@@ -40,7 +40,7 @@ make install
 - Setup port-forwards
 ``` bash
 kubectl port-forward svc/tgapi 30110:3000 &
-kubectl port-forward svc/testgrid-web 30881:30881
+kubectl port-forward svc/testgrid-web 30881:8080
 ```
 
 - Now you are ready to do your first test. 

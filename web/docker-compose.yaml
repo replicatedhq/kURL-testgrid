@@ -11,5 +11,5 @@ services:
       - ".:/src"
       - /src/node_modules
     ports:
-     - 30881:30881  
+     - 30881:8080
     restart: "always"
