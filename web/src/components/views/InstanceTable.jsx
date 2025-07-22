@@ -11,6 +11,7 @@ import * as parseAnsi from "parse-ansi";
 import MonacoEditor from "react-monaco-editor";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/theme-chrome";
+import "ace-builds/src-noconflict/ext-searchbox";
 
 import Loader from "../shared/Loader";
 
