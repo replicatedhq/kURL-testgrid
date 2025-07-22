@@ -10,6 +10,7 @@ import * as parseAnsi from "parse-ansi";
 
 import MonacoEditor from "react-monaco-editor";
 import AceEditor from "react-ace";
+import "brace/theme/chrome";
 
 import Loader from "../shared/Loader";
 
