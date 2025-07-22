@@ -65,7 +65,7 @@ jobs:
 
     - uses: actions/checkout@v4
 
-    - run: make -C web deps build-staging
+    - run: make -C web deps lint build-staging
 
   docker-image-tgapi:
     runs-on: ubuntu-latest
