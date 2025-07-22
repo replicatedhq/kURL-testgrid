@@ -159,7 +159,7 @@ func cleanupPVCs(clientset *kubernetes.Clientset) error {
 	for _, pvc := range pvcs.Items {
 		// clean pvc older timeoutAfterMinutes+10 minutes
 		if time.Since(pvc.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+10 {
-			pvc.ObjectMeta.SetFinalizers(nil)
+			pvc.SetFinalizers(nil)
 			p, err := clientset.CoreV1().PersistentVolumeClaims(Namespace).Update(context.TODO(), &pvc, metav1.UpdateOptions{})
 			if err != nil {
 				fmt.Printf("Failed removing finalizers for pvc %s; EROOR: %s\n", p.Name, err)
@@ -188,7 +188,7 @@ func cleanupPVs(clientset *kubernetes.Clientset) error {
 	for _, pv := range pvs.Items {
 		localPath := pv.Spec.Local.Path
 		// deleting PVs older than timeoutAfterMinutes+20 minutes
-		if time.Since(pv.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+20 && pv.ObjectMeta.DeletionTimestamp == nil {
+		if time.Since(pv.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+20 && pv.DeletionTimestamp == nil {
 			err := clientset.CoreV1().PersistentVolumes().Delete(context.TODO(), pv.Name, metav1.DeleteOptions{})
 			if err != nil {
 				fmt.Printf("Failed to delete pv %s; ERROR: %s\n", pv.Name, err)
@@ -202,9 +202,9 @@ func cleanupPVs(clientset *kubernetes.Clientset) error {
 			if err != nil {
 				fmt.Printf("Failed to delete %s; ERROR: %s\n", localPath, err)
 			}
-		} else if pv.ObjectMeta.DeletionTimestamp != nil {
+		} else if pv.DeletionTimestamp != nil {
 			// cleaning pv stack in Terminating state
-			pv.ObjectMeta.SetFinalizers(nil)
+			pv.SetFinalizers(nil)
 			p, err := clientset.CoreV1().PersistentVolumes().Update(context.TODO(), &pv, metav1.UpdateOptions{})
 			if err != nil {
 				fmt.Printf("Failed removing finalizers for pv %s; EROOR: %s\n", p.Name, err)

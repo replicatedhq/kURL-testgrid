@@ -10,7 +10,6 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
@@ -34,8 +33,6 @@ type kurlErrResp struct {
 }
 
 func Run(schedulerOptions types.SchedulerOptions) error {
-	rand.Seed(time.Now().UnixNano())
-
 	plannedInstances := []tghandlers.PlannedInstance{}
 
 	operatingSystems, err := getOses(schedulerOptions.OSSpec)

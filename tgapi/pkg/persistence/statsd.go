@@ -72,5 +72,5 @@ func getInstancePrivateIP(cfg aws.Config) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return result.InstanceIdentityDocument.PrivateIP, nil
+	return result.PrivateIP, nil
 }

@@ -27,8 +27,6 @@ func RunCmd() *cobra.Command {
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rand.Seed(time.Now().UnixNano())
-
 			rRoot := mux.NewRouter()
 			rRoot.Use(mux.CORSMethodMiddleware(rRoot))
 
