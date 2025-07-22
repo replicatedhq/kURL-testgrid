@@ -6,46 +6,46 @@ var kubernetesVersions = []string{
 }
 
 var cri = map[string][]string{
-	"docker": []string{
+	"docker": {
 		"19.03.4",
 		// "18.09.8",
 	},
 }
 
 var cni = map[string][]string{
-	"weave": []string{
+	"weave": {
 		"1.0.4",
 	},
-	// "calico": []string{
+	// "calico": {
 	// 	"3.9.1",
 	// },
 }
 
 var addOnsWithVersions = map[string][]string{
-	// "aws": []string{
+	// "aws": {
 	// 	// "0.0.1",
 	// },
-	"contour": []string{
+	"contour": {
 		"1.0.1",
 		// "0.14.0",
 	},
-	"ekco": []string{
+	"ekco": {
 		"0.2.4",
 		// "0.2.3",
 		// "0.2.2",
 		// "0.2.1",
 		// "0.1.0",
 	},
-	// "fluentd": []string{
+	// "fluentd": {
 	// 	"1.7.4",
 	// },
-	"rook": []string{
+	"rook": {
 		"1.0.4",
 	},
-	"prometheus": []string{
+	"prometheus": {
 		"0.33.0",
 	},
-	"kotsadm": []string{
+	"kotsadm": {
 		"1.16.0",
 		// "1.15.5",
 		// "1.15.4",
@@ -54,17 +54,17 @@ var addOnsWithVersions = map[string][]string{
 		// "1.15.1",
 		// "1.15.0",
 	},
-	"minio": []string{
+	"minio": {
 		"2020-01-25T02-50-51Z",
 	},
-	// "nodeless": []string{},
-	// "openebs": []string{
+	// "nodeless": {},
+	// "openebs": {
 	// 	"1.6.0",
 	// },
-	"registry": []string{
+	"registry": {
 		"2.7.1",
 	},
-	"velero": []string{
+	"velero": {
 		"1.2.0",
 	},
 }
