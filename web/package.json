@@ -49,7 +49,7 @@
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
-    "@sentry/browser": "^9.40.0",
+    "@sentry/browser": "^10.0.0",
     "accounting": "^0.4.1",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
