@@ -26,7 +26,7 @@ require (
 	k8s.io/client-go v0.33.2
 	kubevirt.io/api v1.6.0
 	kubevirt.io/client-go v1.5.2
-	sigs.k8s.io/yaml v1.5.0
+	sigs.k8s.io/yaml v1.6.0
 )
 
 require (
