@@ -9,7 +9,7 @@ jobs:
   staging-docker-image-tgapi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - run: |
         docker build -f tgapi/deploy/Dockerfile \
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: staging-docker-image-tgapi
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: kustomize
       run: |
@@ -71,7 +71,7 @@ jobs:
   production-docker-image-tgapi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - run: |
         docker build -f tgapi/deploy/Dockerfile \
@@ -91,7 +91,7 @@ jobs:
   docker-image-tgrun:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: tgrun-build
         run: |
           docker build -f tgrun/Dockerfile \
@@ -114,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: production-docker-image-tgapi
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: kustomize
       run: |
