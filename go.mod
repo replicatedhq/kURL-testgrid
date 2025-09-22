@@ -24,8 +24,8 @@ require (
 	k8s.io/api v0.33.4
 	k8s.io/apimachinery v0.33.4
 	k8s.io/client-go v0.33.4
-	kubevirt.io/api v1.6.0
-	kubevirt.io/client-go v1.6.0
+	kubevirt.io/api v1.6.1
+	kubevirt.io/client-go v1.6.1
 	sigs.k8s.io/yaml v1.6.0
 )
 
