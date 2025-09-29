@@ -4,7 +4,7 @@ go 1.24.6
 
 require (
 	filippo.io/age v1.2.1
-	github.com/DataDog/datadog-go/v5 v5.7.1
+	github.com/DataDog/datadog-go/v5 v5.8.0
 	github.com/aws/aws-sdk-go-v2 v1.39.2
 	github.com/aws/aws-sdk-go-v2/config v1.31.11
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.9
