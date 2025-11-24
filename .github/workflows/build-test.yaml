@@ -7,7 +7,7 @@ jobs:
   validate-go-mod:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate-go-mod
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Setup Go
       uses: actions/setup-go@v6
       with:
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate-go-mod
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Setup Go
       uses: actions/setup-go@v6
       with:
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate-go-mod
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - uses: actions/setup-node@v6
       with:
@@ -70,7 +70,7 @@ jobs:
   docker-image-tgapi:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: tgapi-build
         run: |
           docker build -f tgapi/deploy/Dockerfile \
@@ -82,7 +82,7 @@ jobs:
   docker-image-tgrun:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: tgrun-build
         run: |
           docker build -f tgrun/Dockerfile \
