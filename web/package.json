@@ -21,7 +21,7 @@
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-react": "^7.28.5",
     "@typescript-eslint/parser": "^8.48.1",
-    "autoprefixer": "^10.4.22",
+    "autoprefixer": "^10.4.23",
     "axios": "^1.13",
     "babel-loader": "^10.0.0",
     "cross-env": "^10.1.0",
