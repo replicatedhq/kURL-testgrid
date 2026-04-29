@@ -13,9 +13,3 @@ sbom/
 .vscode
 
 node_modules
-
-# Gas Town polecat runtime (not part of the project)
-.beads/
-.claude/
-.runtime/
-CLAUDE.md
