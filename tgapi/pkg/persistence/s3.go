@@ -5,12 +5,12 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 var s3Client *s3.Client
-var s3UploadManager *manager.Uploader
+var s3UploadManager *transfermanager.Client
 var s3Mu sync.Mutex
 
 func GetS3Client() *s3.Client {
@@ -27,7 +27,7 @@ func GetS3Client() *s3.Client {
 	return s3Client
 }
 
-func GetS3Uploader() *manager.Uploader {
+func GetS3Uploader() *transfermanager.Client {
 	s3Mu.Lock()
 	defer s3Mu.Unlock()
 
@@ -36,7 +36,7 @@ func GetS3Uploader() *manager.Uploader {
 		if err != nil {
 			panic(err)
 		}
-		s3UploadManager = manager.NewUploader(s3.NewFromConfig(cfg))
+		s3UploadManager = transfermanager.New(s3.NewFromConfig(cfg))
 	}
 	return s3UploadManager
 }
