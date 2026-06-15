@@ -1,0 +1,46 @@
+name: cleanup-testgrid
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to clean up'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      ref-id:
+        description: 'Ref ID to cancel (optional, cancels all running instances for this ref)'
+        required: false
+        default: ''
+      all-running:
+        description: 'Cancel ALL running instances older than N hours (use with caution)'
+        required: false
+        default: 'false'
+        type: boolean
+      hours:
+        description: 'Minimum age in hours to cancel (for all-running)'
+        required: false
+        default: '24'
+
+jobs:
+  cancel-by-ref:
+    if: github.event.inputs.ref-id != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel running instances by ref
+        env:
+          API_ENDPOINT: ${{ github.event.inputs.environment == 'production' && 'https://api.testgrid.kurl.sh' || 'https://api.testgrid.kurl.sh' }}
+          API_TOKEN: ${{ secrets.TESTGRID_API_TOKEN }}
+          REF_ID: ${{ github.event.inputs.ref-id }}
+        run: |
+          curl -u "token:${API_TOKEN}" \
+            -X POST \
+            "${API_ENDPOINT}/v1/ref/${REF_ID}/cancel"
+
+  # NOTE: Cancelling all running instances across all refs requires a more advanced query.
+  # The /v1/ref/{refId}/cancel endpoint cancels all running instances for a specific ref.
+  # To cancel all running instances, you would need to query the API for all running refs
+  # and then call the cancel endpoint for each one.

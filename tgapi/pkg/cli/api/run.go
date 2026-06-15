@@ -47,6 +47,7 @@ func RunCmd() *cobra.Command {
 			r.HandleFunc("/api/v1/instance/{nodeId}/node-logs", handlers.GetNodeLogs).Methods("GET")
 
 			rAuth.HandleFunc("/v1/ref/{refId}/start", handlers.StartRef).Methods("POST")
+			rAuth.HandleFunc("/v1/ref/{refId}/cancel", handlers.CancelInstances).Methods("POST")
 
 			r.HandleFunc("/v1/instance/{instanceId}/start", handlers.StartInstance).Methods("POST")     // called when vm image has been loaded and k8s object created
 			r.HandleFunc("/v1/instance/{instanceId}/running", handlers.RunningInstance).Methods("POST") // called by script running within vm

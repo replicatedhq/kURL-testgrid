@@ -206,6 +206,34 @@ where dequeued_at is null and testrun_ref = $1`
 	return nil
 }
 
+func CancelRunningByRef(refID string) ([]string, error) {
+	db := persistence.MustGetPGSession()
+
+	query := `
+update testinstance set
+is_success = false, failure_reason = 'cancelled',
+finished_at = now()
+where dequeued_at is not null and finished_at is null and testrun_ref = $1
+returning id`
+
+	rows, err := db.Query(query, refID)
+	if err != nil {
+		return nil, errors.Wrap(err, "db exec")
+	}
+	defer rows.Close()
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, errors.Wrap(err, "scan id")
+		}
+		ids = append(ids, id)
+	}
+
+	return ids, nil
+}
+
 // List returns a list of test instances.
 // Note: pagination (limit and offset) are applied to instances with distinct kurl URLs (instances with same kurl URL count as 1)
 func List(refID string, limit int, offset int, addons map[string]string) ([]types.TestInstance, error) {
