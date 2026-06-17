@@ -616,9 +616,26 @@ function is_ubuntu_2404() {
     return 1
 }
 
+function is_rhel_10_variant() {
+    if grep '^ID=' /etc/os-release | grep -qE '(centos|rhel|ol|rocky)' ; then
+        if grep '^VERSION_ID=' /etc/os-release | grep -q '=*"10' ; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
 function rhel_9_install_host_packages() {
     local packages=("$@")
     if is_rhel_9_variant ; then
+      # install required host packages
+      yum install -y "${packages[@]}"
+    fi
+}
+
+function rhel_10_install_host_packages() {
+    local packages=("$@")
+    if is_rhel_10_variant ; then
       # install required host packages
       yum install -y "${packages[@]}"
     fi
