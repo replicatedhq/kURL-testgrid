@@ -616,6 +616,16 @@ function is_ubuntu_2404() {
     return 1
 }
 
+# is_ubuntu_2604 returns 0 if the current distro is Ubuntu 26.04.
+function is_ubuntu_2604() {
+    if grep '^ID=' /etc/os-release | grep -qE '(ubuntu)' ; then
+        if grep '^VERSION_ID=' /etc/os-release | grep -q '=*"26.04' ; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
 function is_rhel_10_variant() {
     if grep '^ID=' /etc/os-release | grep -qE '(centos|rhel|ol|rocky)' ; then
         if grep '^VERSION_ID=' /etc/os-release | grep -q '=*"10' ; then
@@ -652,6 +662,15 @@ function amazon_2023_install_host_packages() {
 function ubuntu_2404_install_host_packages() {
     local packages=("$@")
     if is_ubuntu_2404 ; then
+      # install required host packages
+      apt update
+      apt install -y "${packages[@]}"
+    fi
+}
+
+function ubuntu_2604_install_host_packages() {
+    local packages=("$@")
+    if is_ubuntu_2604 ; then
       # install required host packages
       apt update
       apt install -y "${packages[@]}"
