@@ -1,4 +1,4 @@
-FROM golang:1.25
+FROM golang:1.26
 
 ADD ./go.* /go/src/github.com/replicatedhq/kurl-testgrid/
 ADD ./tgapi /go/src/github.com/replicatedhq/kurl-testgrid/tgapi
