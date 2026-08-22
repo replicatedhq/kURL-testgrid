@@ -5,20 +5,20 @@ go 1.26.5
 require (
 	filippo.io/age v1.3.1
 	github.com/DataDog/datadog-go/v5 v5.9.1
-	github.com/aws/aws-sdk-go-v2 v1.43.6
-	github.com/aws/aws-sdk-go-v2/config v1.32.37
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.37
-	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.3.14
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.107.2
+	github.com/aws/aws-sdk-go-v2 v1.43.7
+	github.com/aws/aws-sdk-go-v2/config v1.32.38
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.38
+	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.3.15
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.107.3
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.12.3
 	github.com/pkg/errors v0.9.1
 	github.com/replicatedhq/kurlkinds v1.5.0
-	github.com/replicatedhq/troubleshoot v0.132.1
+	github.com/replicatedhq/troubleshoot v0.133.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	go.uber.org/zap v1.28.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.36.3
@@ -33,18 +33,18 @@ require (
 	filippo.io/hpke v0.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.18 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.36 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.37 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.37 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.38 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.37 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.38 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.38 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.39 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.17 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.30 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.37 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.38 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.5.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.33.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.45.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.31 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.38 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.39 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.5.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.33.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.45.7 // indirect
 	github.com/aws/smithy-go v1.27.8 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.13.0 // indirect
