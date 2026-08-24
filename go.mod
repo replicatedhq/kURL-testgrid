@@ -15,10 +15,10 @@ require (
 	github.com/lib/pq v1.12.3
 	github.com/pkg/errors v0.9.1
 	github.com/replicatedhq/kurlkinds v1.5.0
-	github.com/replicatedhq/troubleshoot v0.132.1
+	github.com/replicatedhq/troubleshoot v0.133.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	go.uber.org/zap v1.28.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.36.3
