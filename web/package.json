@@ -53,7 +53,7 @@
     "accounting": "^0.4.1",
     "lodash": "^4.18.1",
     "moment": "^2.30.1",
-    "monaco-editor": "^0.33.0",
+    "monaco-editor": "^0.56.0",
     "monaco-editor-webpack-plugin": "^7.1.1",
     "parse-ansi": "^1.0.3",
     "prop-types": "^15.8.1",
