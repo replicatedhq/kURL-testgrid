@@ -20,7 +20,7 @@
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/preset-env": "^7.29.7",
     "@babel/preset-react": "^7.29.7",
-    "@typescript-eslint/parser": "^8.70.0",
+    "@typescript-eslint/parser": "^8.70.1",
     "autoprefixer": "^10.6.1",
     "axios": "^1.20.0",
     "babel-loader": "^10.1.1",
