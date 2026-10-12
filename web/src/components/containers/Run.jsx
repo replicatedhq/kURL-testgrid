@@ -146,6 +146,11 @@ const Run = () => {
     );
   }
 
+  // a run is cancellable while any of its instances is pending or running (i.e. not finished)
+  const hasCancellableInstances = Object.values(instancesMap).some(testInstances =>
+    testInstances.some(instance => !instance.finishedAt)
+  );
+
   return (
     <div className="RunContainer">
       <div className="flex alignItems--center u-borderBottom--gray u-marginBottom--20 u-paddingBottom--small">
@@ -154,11 +159,13 @@ const Run = () => {
           <span className="u-color--astral">Runs</span>
         </div>
         <span className="u-fontSize--jumbo2 u-fontWeight--bold u-color--tuna">kURL Test Run: {`${params.runId}`}</span>
-        <div className="flex1 flex justifyContent--flexEnd">
-          <button type="button" className="btn secondary red" onClick={cancelRun} disabled={isCancelling}>
-            {isCancelling ? "Cancelling…" : "Cancel Run"}
-          </button>
-        </div>
+        {hasCancellableInstances &&
+          <div className="flex1 flex justifyContent--flexEnd">
+            <button type="button" className="btn secondary red" onClick={cancelRun} disabled={isCancelling}>
+              {isCancelling ? "Cancelling…" : "Cancel Run"}
+            </button>
+          </div>
+        }
       </div>
 
       {/* Addons search */}
