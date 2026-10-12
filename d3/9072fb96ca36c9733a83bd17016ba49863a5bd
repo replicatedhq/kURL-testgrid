@@ -1,0 +1,19 @@
+web/src/components/containers/Run.jsx
+  s_f494296567c8ff::t_7f26dab4084f6a 149-153,162-168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d39072fb96ca36c9733a83bd17016ba49863a5bd",
+  "prompts": {},
+  "sessions": {
+    "s_f494296567c8ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ed2362f42ffe2vXHXdAKZuK7Lm",
+        "model": "accounts/fireworks/routers/kimi-latest"
+      },
+      "human_author": "Xav Paice <xav@replicated.com>"
+    }
+  }
+}
