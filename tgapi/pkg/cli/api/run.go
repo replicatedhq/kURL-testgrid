@@ -72,6 +72,7 @@ func RunCmd() *cobra.Command {
 			r.HandleFunc("/v1/skip/ref/{refId}", handlers.SkipInstances).Methods("POST")
 			r.HandleFunc("/v1/ref/{refId}/cancel", handlers.CancelRef).Methods("POST")
 			r.HandleFunc("/v1/instance/{instanceId}/cancel", handlers.CancelInstance).Methods("POST")
+			r.HandleFunc("/v1/instance/{instanceId}/cancelled", handlers.GetInstanceCancelled).Methods("GET")
 			r.HandleFunc("/v1/instances/cancelled", handlers.ListCancelled).Methods("GET")
 
 			r.HandleFunc("/v1/runner/status", handlers.RunnerStatus).Methods("POST")

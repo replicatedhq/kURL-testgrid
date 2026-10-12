@@ -24,8 +24,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// errInstanceCancelled is returned when an instance is cancelled via the api
+// while the runner is setting it up.
+var errInstanceCancelled = errors.New("instance cancelled")
+
 func Run(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	err := execute(singleTest, uploadProxyURL, tempDir)
+
+	if errors.Is(err, errInstanceCancelled) {
+		// do not report a failure: the instance was cancelled on purpose and
+		// the api guards cancelled rows against late failure reports anyway
+		fmt.Println("  instance cancelled, abandoning", singleTest.ID)
+		return nil
+	}
 
 	if err != nil {
 		fmt.Println("execute failed")
@@ -39,6 +50,40 @@ func Run(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	}
 
 	return nil
+}
+
+// checkInstanceCancelled returns errInstanceCancelled if the instance has been
+// cancelled via the api. api errors are logged and ignored so a transient
+// tgapi failure does not abort a test.
+func checkInstanceCancelled(singleTest types.SingleRun) error {
+	cancelled, err := isInstanceCancelled(singleTest.TestGridAPIEndpoint, singleTest.ID)
+	if err != nil {
+		log.Printf("failed to check cancellation status of %s: %v\n", singleTest.ID, err)
+		return nil
+	}
+	if cancelled {
+		return errInstanceCancelled
+	}
+	return nil
+}
+
+func isInstanceCancelled(apiEndpoint, id string) (bool, error) {
+	resp, err := apiHTTPClient.Get(fmt.Sprintf("%s/v1/instance/%s/cancelled", apiEndpoint, id))
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get instance cancelled")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, errors.Errorf("cancelled endpoint returned %d", resp.StatusCode)
+	}
+
+	cancelledResponse := tghandlers.GetInstanceCancelledResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(&cancelledResponse); err != nil {
+		return false, errors.Wrap(err, "failed to decode response")
+	}
+
+	return cancelledResponse.Cancelled, nil
 }
 
 func reportStarted(singleTest types.SingleRun) error {
@@ -129,6 +174,11 @@ func urlToPath(url string) string {
 }
 
 func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
+	// abort before downloading the image if the instance was cancelled while queued
+	if err := checkInstanceCancelled(singleTest); err != nil {
+		return err
+	}
+
 	osImagePath := urlToPath(singleTest.OperatingSystemImage)
 
 	_, err := os.Stat(filepath.Join(tempDir, osImagePath))
@@ -164,6 +214,10 @@ func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	requiredCPU, requiredMemory, nodes := requiredResources(singleTest)
 	fmt.Printf("  [waiting for %d CPUs and %dGB to be available for %d nodes]\n", requiredCPU/1000, requiredMemory/1024/1024/1024, nodes)
 	for {
+		// abort long resource waits promptly on cancellation
+		if err := checkInstanceCancelled(singleTest); err != nil {
+			return err
+		}
 		availableResources, err := areResourcesAvailable(singleTest)
 		if err != nil {
 			log.Println(errors.Wrap(err, "failed to check if there are sufficient resources for the cluster"))
@@ -175,12 +229,18 @@ func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	}
 
 	// create initial primary node
+	if err := checkInstanceCancelled(singleTest); err != nil {
+		return err
+	}
 	if err = vmi.Create(singleTest, vmi.InitPrimaryNode, vmi.InitPrimaryNode, tempDir, osImagePath, uploadProxyURL); err != nil {
 		return errors.Wrap(err, "failed to create vm for init primary node")
 	}
 
 	// always schedule initial primary before additional nodes
 	for {
+		if err := checkInstanceCancelled(singleTest); err != nil {
+			return err
+		}
 		canSchedule, err := canScheduleNewVM()
 		if err != nil {
 			log.Println(errors.Wrap(err, "failed to check if can schedule"))
@@ -193,6 +253,9 @@ func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 
 	// create primary nodes where we exclude the initial primary node so I will start with 1
 	for i := 1; i < singleTest.NumPrimaryNodes; i++ {
+		if err := checkInstanceCancelled(singleTest); err != nil {
+			return err
+		}
 		primaryNodeName := fmt.Sprintf("%s-%d", vmi.PrimaryNode, i)
 		fmt.Println("  [creating primary node", primaryNodeName, "]")
 		if err = vmi.Create(singleTest, primaryNodeName, vmi.PrimaryNode, tempDir, osImagePath, uploadProxyURL); err != nil {
@@ -201,6 +264,9 @@ func execute(singleTest types.SingleRun, uploadProxyURL, tempDir string) error {
 	}
 	// create secondary nodes
 	for i := 0; i < singleTest.NumSecondaryNodes; i++ {
+		if err := checkInstanceCancelled(singleTest); err != nil {
+			return err
+		}
 		secondaryNodeName := fmt.Sprintf("%s-%d", vmi.SecondaryNode, i)
 		fmt.Println("  [creating secondary node", secondaryNodeName, "]")
 		if err = vmi.Create(singleTest, secondaryNodeName, vmi.SecondaryNode, tempDir, osImagePath, uploadProxyURL); err != nil {

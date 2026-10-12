@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/helpers"
 	runnerVmi "github.com/replicatedhq/kurl-testgrid/tgrun/pkg/runner/vmi"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	kubevirtv1 "kubevirt.io/api/core/v1"
@@ -159,19 +161,8 @@ func cleanupPVCs(clientset *kubernetes.Clientset) error {
 	for _, pvc := range pvcs.Items {
 		// clean pvc older timeoutAfterMinutes+10 minutes
 		if time.Since(pvc.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+10 {
-			pvc.SetFinalizers(nil)
-			p, err := clientset.CoreV1().PersistentVolumeClaims(Namespace).Update(context.TODO(), &pvc, metav1.UpdateOptions{})
-			if err != nil {
-				fmt.Printf("Failed removing finalizers for pvc %s; EROOR: %s\n", p.Name, err)
-			} else {
-				fmt.Printf("Removed finalizers on %s\n", p.Name)
-			}
-
-			err = clientset.CoreV1().PersistentVolumeClaims(Namespace).Delete(context.TODO(), pvc.Name, metav1.DeleteOptions{})
-			if err != nil {
+			if err := deletePVC(clientset, pvc); err != nil {
 				fmt.Printf("Failed to delete pvc %s: %v\n", pvc.Name, err)
-			} else {
-				fmt.Printf("Deleted pvc %s\n", pvc.Name)
 			}
 		}
 	}
@@ -190,31 +181,14 @@ func cleanupPVs(clientset *kubernetes.Clientset) error {
 		if pv.Spec.Local == nil {
 			continue
 		}
-		localPath := pv.Spec.Local.Path
 		// deleting PVs older than timeoutAfterMinutes+20 minutes
 		if time.Since(pv.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+20 && pv.DeletionTimestamp == nil {
-			err := clientset.CoreV1().PersistentVolumes().Delete(context.TODO(), pv.Name, metav1.DeleteOptions{})
-			if err != nil {
-				fmt.Printf("Failed to delete pv %s; ERROR: %s\n", pv.Name, err)
-			} else {
-				fmt.Printf("Deleted pv %s\n", pv.Name)
-			}
-			// Image file gets deleted and the space is reclamed on pv deletion
-			// However local directory is left with tmpimage file, removing
-			// 523M    /var/openebs/local/pvc-xxx
-			err = os.RemoveAll(localPath)
-			if err != nil {
-				fmt.Printf("Failed to delete %s; ERROR: %s\n", localPath, err)
+			if err := deletePV(clientset, pv); err != nil {
+				fmt.Printf("Failed to delete pv %s: %v\n", pv.Name, err)
 			}
 		} else if pv.DeletionTimestamp != nil {
-			// cleaning pv stack in Terminating state
-			pv.SetFinalizers(nil)
-			p, err := clientset.CoreV1().PersistentVolumes().Update(context.TODO(), &pv, metav1.UpdateOptions{})
-			if err != nil {
-				fmt.Printf("Failed removing finalizers for pv %s; EROOR: %s\n", p.Name, err)
-			} else {
-				fmt.Printf("Removed finalizers on %s, localPath: %s\n", p.Name, localPath)
-			}
+			// cleaning pv stuck in Terminating state
+			stripPVFinalizers(clientset, &pv)
 		}
 	}
 	return nil
@@ -230,13 +204,71 @@ func cleanupSecrets(clientset *kubernetes.Clientset) error {
 	for _, sec := range secrets.Items {
 		// Delete stale secrets older than timeoutAfterMinutes+60 minutes
 		if strings.HasPrefix(sec.Name, "cloud") && time.Since(sec.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+60 {
-			err := clientset.CoreV1().Secrets(Namespace).Delete(context.TODO(), sec.Name, metav1.DeleteOptions{})
-			if err != nil {
-				fmt.Printf("Failed to delete secret %s; ERROR: %s\n", sec.Name, err)
-			} else {
-				fmt.Printf("Deleted stale secret %s\n", sec.Name)
+			if err := deleteSecret(clientset, sec.Name); err != nil {
+				fmt.Printf("Failed to delete secret %s: %v\n", sec.Name, err)
 			}
 		}
 	}
+	return nil
+}
+
+// deletePVC strips finalizers and deletes the pvc.
+// NOTE: an OpenEBS webhook bug can wedge finalizer removal; stripping first keeps deletes reliable.
+func deletePVC(clientset *kubernetes.Clientset, pvc corev1.PersistentVolumeClaim) error {
+	pvc.SetFinalizers(nil)
+	if _, err := clientset.CoreV1().PersistentVolumeClaims(Namespace).Update(context.TODO(), &pvc, metav1.UpdateOptions{}); err != nil {
+		fmt.Printf("Failed removing finalizers for pvc %s: %v\n", pvc.Name, err)
+	} else {
+		fmt.Printf("Removed finalizers on %s\n", pvc.Name)
+	}
+
+	if err := clientset.CoreV1().PersistentVolumeClaims(Namespace).Delete(context.TODO(), pvc.Name, metav1.DeleteOptions{}); err != nil && !apierrors.IsNotFound(err) {
+		return errors.Wrapf(err, "failed to delete pvc %s", pvc.Name)
+	}
+	fmt.Printf("Deleted pvc %s\n", pvc.Name)
+	return nil
+}
+
+// stripPVFinalizers removes finalizers from a pv stuck in Terminating.
+func stripPVFinalizers(clientset *kubernetes.Clientset, pv *corev1.PersistentVolume) {
+	pv.SetFinalizers(nil)
+	p, err := clientset.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
+	if err != nil {
+		fmt.Printf("Failed removing finalizers for pv %s: %v\n", p.Name, err)
+	} else {
+		fmt.Printf("Removed finalizers on %s\n", p.Name)
+	}
+}
+
+// deletePV strips finalizers, deletes the pv, and removes its local path from
+// disk: the image file is deleted on pv deletion but the local directory is
+// left with a tmpimage file (/var/openebs/local/pvc-xxx).
+func deletePV(clientset *kubernetes.Clientset, pv corev1.PersistentVolume) error {
+	// only ever touch testgrid local-path volumes
+	localPath := ""
+	if pv.Spec.Local != nil && strings.HasPrefix(pv.Spec.Local.Path, "/var/openebs/local/pvc-") {
+		localPath = pv.Spec.Local.Path
+	}
+
+	stripPVFinalizers(clientset, &pv)
+
+	if err := clientset.CoreV1().PersistentVolumes().Delete(context.TODO(), pv.Name, metav1.DeleteOptions{}); err != nil && !apierrors.IsNotFound(err) {
+		return errors.Wrapf(err, "failed to delete pv %s", pv.Name)
+	}
+	fmt.Printf("Deleted pv %s\n", pv.Name)
+
+	if localPath != "" {
+		if err := os.RemoveAll(localPath); err != nil {
+			fmt.Printf("Failed to delete %s: %v\n", localPath, err)
+		}
+	}
+	return nil
+}
+
+func deleteSecret(clientset *kubernetes.Clientset, name string) error {
+	if err := clientset.CoreV1().Secrets(Namespace).Delete(context.TODO(), name, metav1.DeleteOptions{}); err != nil && !apierrors.IsNotFound(err) {
+		return errors.Wrapf(err, "failed to delete secret %s", name)
+	}
+	fmt.Printf("Deleted secret %s\n", name)
 	return nil
 }

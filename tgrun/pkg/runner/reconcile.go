@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	tghandlers "github.com/replicatedhq/kurl-testgrid/tgapi/pkg/handlers"
@@ -19,6 +19,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"kubevirt.io/client-go/kubecli"
 )
+
+// apiHTTPClient bounds API calls so a hung tgapi does not stall the shared
+// cleanup goroutine (VMI timeout cleanup, data cleanup, metrics).
+var apiHTTPClient = &http.Client{Timeout: 30 * time.Second}
 
 // ReconcileCancelledVMIs polls the testgrid api for recently cancelled
 // instances and deletes the corresponding local VMIs and their data volumes
@@ -41,11 +45,19 @@ func ReconcileCancelledVMIs(runnerOptions types.RunnerOptions) error {
 		return err
 	}
 
+	// VMI deletion is async and virt-launcher may still have the disk mounted,
+	// so leave the data of instances whose VMIs are still terminating for the
+	// next pass instead of pulling the PVC out from under qemu.
+	stillTerminating, err := instanceIDsWithVMIs(virtClient, cancelledIDs)
+	if err != nil {
+		return err
+	}
+
 	clientset, err := helpers.GetClientset()
 	if err != nil {
 		return errors.Wrap(err, "failed to get clientset")
 	}
-	if err := deleteCancelledData(clientset, cancelledIDs); err != nil {
+	if err := deleteCancelledData(clientset, cancelledIDs, stillTerminating); err != nil {
 		return err
 	}
 
@@ -53,7 +65,7 @@ func ReconcileCancelledVMIs(runnerOptions types.RunnerOptions) error {
 }
 
 func getCancelledInstanceIDs(apiEndpoint string) (map[string]bool, error) {
-	resp, err := http.DefaultClient.Get(fmt.Sprintf("%s/v1/instances/cancelled", apiEndpoint))
+	resp, err := apiHTTPClient.Get(fmt.Sprintf("%s/v1/instances/cancelled", apiEndpoint))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get cancelled instances")
 	}
@@ -62,6 +74,10 @@ func getCancelledInstanceIDs(apiEndpoint string) (map[string]bool, error) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read body")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("cancelled instances endpoint returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
 	}
 
 	listCancelledResponse := tghandlers.ListCancelledResponse{}
@@ -78,8 +94,6 @@ func getCancelledInstanceIDs(apiEndpoint string) (map[string]bool, error) {
 }
 
 // deleteCancelledVMIs deletes every VMI belonging to a cancelled instance.
-// Matching is by testid annotation, or by "{instanceId}-" name prefix for
-// VMIs without annotations (e.g. sendlogs VMs).
 func deleteCancelledVMIs(virtClient kubecli.KubevirtClient, cancelledIDs map[string]bool) error {
 	vmiList, err := virtClient.VirtualMachineInstance(Namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -87,7 +101,7 @@ func deleteCancelledVMIs(virtClient kubecli.KubevirtClient, cancelledIDs map[str
 	}
 
 	for _, vmi := range vmiList.Items {
-		if !isCancelledResource(cancelledIDs, vmi.Name, vmi.Annotations[runnerVmi.TestIDAnnotation]) {
+		if _, ok := matchCancelledInstance(cancelledIDs, vmi.Name, vmi.Annotations[runnerVmi.TestIDAnnotation]); !ok {
 			continue
 		}
 
@@ -102,27 +116,48 @@ func deleteCancelledVMIs(virtClient kubecli.KubevirtClient, cancelledIDs map[str
 	return nil
 }
 
+// instanceIDsWithVMIs returns the subset of cancelledIDs that still have a VMI
+// object on this host. A VMI with a deletion timestamp is still terminating
+// and its virt-launcher pod may still have the disk mounted.
+func instanceIDsWithVMIs(virtClient kubecli.KubevirtClient, cancelledIDs map[string]bool) (map[string]bool, error) {
+	vmiList, err := virtClient.VirtualMachineInstance(Namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list vmis")
+	}
+
+	remaining := map[string]bool{}
+	for _, vmi := range vmiList.Items {
+		if id, ok := matchCancelledInstance(cancelledIDs, vmi.Name, vmi.Annotations[runnerVmi.TestIDAnnotation]); ok {
+			remaining[id] = true
+		}
+	}
+
+	return remaining, nil
+}
+
 // deleteCancelledData deletes the PVCs, PVs and cloud-init secrets of
 // cancelled instances immediately instead of waiting for the age-based
-// CleanUpData loop.
-func deleteCancelledData(clientset *kubernetes.Clientset, cancelledIDs map[string]bool) error {
-	if err := deleteCancelledPVCsAndPVs(clientset, cancelledIDs); err != nil {
+// CleanUpData loop. Instances in stillTerminating are skipped until their
+// VMIs are gone.
+func deleteCancelledData(clientset *kubernetes.Clientset, cancelledIDs, stillTerminating map[string]bool) error {
+	if err := deleteCancelledPVCsAndPVs(clientset, cancelledIDs, stillTerminating); err != nil {
 		return err
 	}
-	if err := deleteCancelledSecrets(clientset, cancelledIDs); err != nil {
+	if err := deleteCancelledSecrets(clientset, cancelledIDs, stillTerminating); err != nil {
 		return err
 	}
 	return nil
 }
 
-func deleteCancelledPVCsAndPVs(clientset *kubernetes.Clientset, cancelledIDs map[string]bool) error {
+func deleteCancelledPVCsAndPVs(clientset *kubernetes.Clientset, cancelledIDs, stillTerminating map[string]bool) error {
 	pvcs, err := clientset.CoreV1().PersistentVolumeClaims(Namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get pvc list")
 	}
 
 	for _, pvc := range pvcs.Items {
-		if !isCancelledResource(cancelledIDs, pvc.Name, "") {
+		id, ok := matchCancelledInstance(cancelledIDs, pvc.Name, "")
+		if !ok || stillTerminating[id] {
 			continue
 		}
 
@@ -130,18 +165,10 @@ func deleteCancelledPVCsAndPVs(clientset *kubernetes.Clientset, cancelledIDs map
 		// pvc-<uuid> and cannot be derived from the instance id
 		volumeName := pvc.Spec.VolumeName
 
-		// strip finalizers first; an OpenEBS webhook bug can wedge them
-		pvc.SetFinalizers(nil)
-		if _, err := clientset.CoreV1().PersistentVolumeClaims(Namespace).Update(context.TODO(), &pvc, metav1.UpdateOptions{}); err != nil {
-			fmt.Printf("Failed removing finalizers for cancelled pvc %s: %v\n", pvc.Name, err)
-		}
-
-		err := clientset.CoreV1().PersistentVolumeClaims(Namespace).Delete(context.TODO(), pvc.Name, metav1.DeleteOptions{})
-		if err != nil && !apierrors.IsNotFound(err) {
+		if err := deletePVC(clientset, pvc); err != nil {
 			fmt.Printf("Failed to delete cancelled pvc %s: %v\n", pvc.Name, err)
 			continue
 		}
-		fmt.Printf("Deleted cancelled pvc %s\n", pvc.Name)
 
 		if volumeName != "" {
 			deleteCancelledPV(clientset, volumeName)
@@ -160,31 +187,12 @@ func deleteCancelledPV(clientset *kubernetes.Clientset, volumeName string) {
 		return
 	}
 
-	// only ever touch testgrid local-path volumes
-	localPath := ""
-	if pv.Spec.Local != nil && strings.HasPrefix(pv.Spec.Local.Path, "/var/openebs/local/pvc-") {
-		localPath = pv.Spec.Local.Path
-	}
-
-	pv.SetFinalizers(nil)
-	if _, err := clientset.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{}); err != nil {
-		fmt.Printf("Failed removing finalizers for cancelled pv %s: %v\n", pv.Name, err)
-	}
-
-	if err := clientset.CoreV1().PersistentVolumes().Delete(context.TODO(), pv.Name, metav1.DeleteOptions{}); err != nil && !apierrors.IsNotFound(err) {
+	if err := deletePV(clientset, *pv); err != nil {
 		fmt.Printf("Failed to delete cancelled pv %s: %v\n", pv.Name, err)
-		return
-	}
-	fmt.Printf("Deleted cancelled pv %s\n", pv.Name)
-
-	if localPath != "" {
-		if err := os.RemoveAll(localPath); err != nil {
-			fmt.Printf("Failed to delete %s: %v\n", localPath, err)
-		}
 	}
 }
 
-func deleteCancelledSecrets(clientset *kubernetes.Clientset, cancelledIDs map[string]bool) error {
+func deleteCancelledSecrets(clientset *kubernetes.Clientset, cancelledIDs, stillTerminating map[string]bool) error {
 	secrets, err := clientset.CoreV1().Secrets(Namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get secrets list")
@@ -195,31 +203,30 @@ func deleteCancelledSecrets(clientset *kubernetes.Clientset, cancelledIDs map[st
 		if !strings.HasPrefix(sec.Name, "cloud-init-") {
 			continue
 		}
-		if !isCancelledResource(cancelledIDs, strings.TrimPrefix(sec.Name, "cloud-init-"), "") {
+		id, ok := matchCancelledInstance(cancelledIDs, strings.TrimPrefix(sec.Name, "cloud-init-"), "")
+		if !ok || stillTerminating[id] {
 			continue
 		}
 
-		err := clientset.CoreV1().Secrets(Namespace).Delete(context.TODO(), sec.Name, metav1.DeleteOptions{})
-		if err != nil && !apierrors.IsNotFound(err) {
+		if err := deleteSecret(clientset, sec.Name); err != nil {
 			fmt.Printf("Failed to delete cancelled secret %s: %v\n", sec.Name, err)
-		} else {
-			fmt.Printf("Deleted cancelled secret %s\n", sec.Name)
 		}
 	}
 
 	return nil
 }
 
-// isCancelledResource reports whether a resource belongs to a cancelled
-// instance, by exact annotation match or "{instanceId}-" name prefix.
-func isCancelledResource(cancelledIDs map[string]bool, name string, testIDAnnotation string) bool {
+// matchCancelledInstance returns the cancelled instance ID owning the named
+// resource, by exact testid annotation match or "{instanceId}-" name prefix
+// (the latter covers resources without annotations, e.g. sendlogs VMs).
+func matchCancelledInstance(cancelledIDs map[string]bool, name string, testIDAnnotation string) (string, bool) {
 	if cancelledIDs[testIDAnnotation] {
-		return true
+		return testIDAnnotation, true
 	}
 	for id := range cancelledIDs {
 		if strings.HasPrefix(name, id+"-") {
-			return true
+			return id, true
 		}
 	}
-	return false
+	return "", false
 }
