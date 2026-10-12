@@ -1,0 +1,39 @@
+tgrun/pkg/runner/reconcile.go
+  s_f494296567c8ff::t_b669101620c37e 10,23-26,48-55,60,68,79-82,104,119-137,140-143,146,152,159-160,168,195,206-207,211,219-222,224,228,231
+  s_f494296567c8ff::t_8d49a2010b0c5b 190
+tgrun/pkg/runner/reconcile_test.go
+  s_f494296567c8ff::t_790d1f580cc149 9,19-20,26-27,33-34,40-41,47-48,54-55,61-62,68-69,75-76,83-85
+tgapi/pkg/testinstance/testinstance.go
+  s_f494296567c8ff::t_3b688c7b6e74aa 145,147-148
+  s_f494296567c8ff::t_f0af24a0582d41 209-211,214,218,220,222,226,229-238,241,243,245,249-265,274-275,277-281,283-288,290-295,298,309-310,314
+tgapi/pkg/handlers/get_instance_cancelled.go
+  s_f494296567c8ff::t_80fd5a4b88cd9e 1-29
+tgrun/pkg/runner/cleanup.go
+  s_f494296567c8ff::t_553b48339ebfe9 14-15
+  s_f494296567c8ff::t_9e4e67fcdc44e6 164,186-187,190-191,207-208,214-274
+tgapi/pkg/cli/api/run.go
+  s_f494296567c8ff::t_150e9d9ee09b1e 75
+migrations/tables/testinstance.yaml
+  s_f494296567c8ff::t_684c24d80c6d3a 19-21
+tgrun/pkg/runner/runner.go
+  s_f494296567c8ff::t_e0d1ac07f8fb00 27-30,34-40,55-87
+  s_f494296567c8ff::t_8b8fac80a4c447 217-220,232-234,241-243,256-258,267-269
+  s_f494296567c8ff::t_7abbfd353e44e3 177-181
+  s_f494296567c8ff::t_ea183b0674beaa 88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "03e0b3fa4107498ba4a44f690cddd6e44ba7bfbb",
+  "prompts": {},
+  "sessions": {
+    "s_f494296567c8ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ed2362f42ffe2vXHXdAKZuK7Lm",
+        "model": "accounts/fireworks/routers/kimi-latest"
+      },
+      "human_author": "Xav Paice <xav@replicated.com>"
+    }
+  }
+}
