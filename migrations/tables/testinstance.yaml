@@ -48,6 +48,8 @@ spec:
           type: boolean
         - name: is_skipped
           type: boolean
+        - name: cancelled_at
+          type: timestamp without timezone
         - name: output
           type: text
         - name: sonobuoy_results

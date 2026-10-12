@@ -81,7 +81,7 @@ class Home extends React.Component {
           <button type="button" className="btn primary" onClick={this.searchRuns}>Search</button>
         </div>
 
-        <RunTable runs={this.state.runs} />
+        <RunTable runs={this.state.runs} onRunCancelled={() => this.loadRuns(this.state.currentPage, this.state.pageSize)} />
 
         <Pager
           pagerType="runs"

@@ -45,6 +45,8 @@ func RunCmd() *cobra.Command {
 			r.HandleFunc("/api/v1/instance/{instanceId}/logs", handlers.GetInstanceLogs).Methods("GET", "OPTIONS")
 			r.HandleFunc("/api/v1/instance/{instanceId}/sonobuoy", handlers.GetInstanceSonobuoyResults).Methods("GET", "OPTIONS")
 			r.HandleFunc("/api/v1/instance/{nodeId}/node-logs", handlers.GetNodeLogs).Methods("GET")
+			// browser-facing alias of the cancel endpoint below (the web UI's API_ENDPOINT includes the /api/v1 prefix)
+			r.HandleFunc("/api/v1/ref/{refId}/cancel", handlers.CancelRef).Methods("POST", "OPTIONS")
 
 			rAuth.HandleFunc("/v1/ref/{refId}/start", handlers.StartRef).Methods("POST")
 
@@ -68,6 +70,9 @@ func RunCmd() *cobra.Command {
 			r.HandleFunc("/v1/dequeue/instance", handlers.DequeueInstance).Methods("GET")
 			r.HandleFunc("/v1/dequeue/ref/{refId}/instance", handlers.DequeueInstanceWithRef).Methods("GET")
 			r.HandleFunc("/v1/skip/ref/{refId}", handlers.SkipInstances).Methods("POST")
+			r.HandleFunc("/v1/ref/{refId}/cancel", handlers.CancelRef).Methods("POST")
+			r.HandleFunc("/v1/instance/{instanceId}/cancel", handlers.CancelInstance).Methods("POST")
+			r.HandleFunc("/v1/instances/cancelled", handlers.ListCancelled).Methods("GET")
 
 			r.HandleFunc("/v1/runner/status", handlers.RunnerStatus).Methods("POST")
 
