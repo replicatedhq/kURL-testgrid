@@ -186,6 +186,10 @@ func cleanupPVs(clientset *kubernetes.Clientset) error {
 
 	// finalizers might get pv in a stack state
 	for _, pv := range pvs.Items {
+		// skip non-local PVs (e.g. hostPath volumes on kind clusters)
+		if pv.Spec.Local == nil {
+			continue
+		}
 		localPath := pv.Spec.Local.Path
 		// deleting PVs older than timeoutAfterMinutes+20 minutes
 		if time.Since(pv.CreationTimestamp.Time).Minutes() > timeoutAfterMinutes+20 && pv.DeletionTimestamp == nil {
