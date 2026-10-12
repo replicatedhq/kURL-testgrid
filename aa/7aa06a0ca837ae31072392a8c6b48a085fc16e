@@ -1,0 +1,58 @@
+tgapi/pkg/cli/api/run.go
+  s_f494296567c8ff::t_1214f6fabf9014 48-49,73-75
+migrations/tables/testinstance.yaml
+  s_f494296567c8ff::t_ab02a0c2031034 51-52
+tgapi/pkg/handlers/cancel_instance.go
+  s_f494296567c8ff::t_4f33ea7378e592 1-35
+web/src/components/containers/Home.jsx
+  s_f494296567c8ff::t_3715952596c4e6 84
+tgapi/pkg/handlers/cancel_ref.go
+  s_f494296567c8ff::t_2afdecc2765b9d 1-41,43-51
+  s_f494296567c8ff::t_c7925fe5caa7a7 42
+tgrun/pkg/runner/reconcile_test.go
+  s_f494296567c8ff::t_bc603596c76bad 1-77
+web/src/components/views/InstanceTable.jsx
+  s_f494296567c8ff::t_a3d4c190c6814f 261-263
+web/src/components/views/RunTable.jsx
+  s_f494296567c8ff::t_34a05e143b58d9 9-31,44-48,64
+web/src/components/containers/Run.jsx
+  s_f494296567c8ff::t_a76aed92e414a4 19
+  s_f494296567c8ff::t_95f343111dd4eb 157-161
+  s_f494296567c8ff::t_139e09b006af1b 113-140
+tgapi/pkg/testinstance/types/types.go
+  s_f494296567c8ff::t_0f3e453db7c7f4 18
+tgapi/pkg/testinstance/testinstance.go
+  s_f494296567c8ff::t_d3ed28dca589c0 358
+  s_f494296567c8ff::t_b3a5f7c7d4fcce 209-307
+  s_f494296567c8ff::t_c5c0aa8612d53e 20
+  s_f494296567c8ff::t_33b93a42542db6 409-411
+  s_f494296567c8ff::t_9a25517f8fedf9 392
+tgapi/pkg/handlers/list_cancelled.go
+  s_f494296567c8ff::t_e10fcd75a49c5d 1-37
+tgrun/pkg/runner/reconcile.go
+  s_f494296567c8ff::t_d477dade88ba50 1-225
+tgapi/pkg/testrun/testrun.go
+  s_f494296567c8ff::t_f8e968d2277bc1 73-74
+web/src/assets/scss/components/InstanceTable.scss
+  s_f494296567c8ff::t_12eac2b4db8dc9 58
+tgapi/pkg/handlers/get_run.go
+  s_f494296567c8ff::t_8c6e1c8f46e1a0 83
+tgrun/pkg/runner/loop.go
+  s_f494296567c8ff::t_dd4914976d0e4b 37-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "aa7aa06a0ca837ae31072392a8c6b48a085fc16e",
+  "prompts": {},
+  "sessions": {
+    "s_f494296567c8ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ed2362f42ffe2vXHXdAKZuK7Lm",
+        "model": "accounts/fireworks/routers/kimi-latest"
+      },
+      "human_author": "Xav Paice <xav@replicated.com>"
+    }
+  }
+}
