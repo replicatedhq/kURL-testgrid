@@ -1,0 +1,19 @@
+tgrun/pkg/runner/cleanup.go
+  s_f494296567c8ff::t_7c6ef992ec13cc 189-192
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8a6174942a3a83e5283b4f91faf0f125dbe14339",
+  "prompts": {},
+  "sessions": {
+    "s_f494296567c8ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ed2362f42ffe2vXHXdAKZuK7Lm",
+        "model": "accounts/fireworks/routers/kimi-latest"
+      },
+      "human_author": "Xav Paice <xav@replicated.com>"
+    }
+  }
+}
