@@ -1,0 +1,36 @@
+tgrun/pkg/runner/reconcile.go
+  s_f494296567c8ff::t_a9c3fb5cd1cecf 74-76
+tgapi/pkg/handlers/cancel_instance.go
+  s_f494296567c8ff::t_8d3edb27fcff6c 28
+tgapi/pkg/cli/api/run.go
+  s_f494296567c8ff::t_2e27e2f7fac9d9 48-50,75-78
+tgapi/pkg/testinstance/testinstance.go
+  s_f494296567c8ff::t_5be3c104e8aca8 4
+  s_f494296567c8ff::t_c1137e245a4f48 212,221,236,244,258-259,264,274-275,278,285,289
+  s_f494296567c8ff::t_5538067b8dc891 312,317,331-332
+  s_f494296567c8ff::t_318e84df486e67 333
+tgapi/pkg/handlers/cancel_ref.go
+  s_f494296567c8ff::t_b4f58d0b8b11db 35
+tgapi/pkg/handlers/get_instance_cancelled.go
+  s_f494296567c8ff::t_584fd956fa6ab9 21
+tgapi/pkg/handlers/list_cancelled.go
+  s_f494296567c8ff::t_9072175acb173d 22
+tgrun/pkg/runner/runner.go
+  s_f494296567c8ff::t_5a3848cd40bf78 82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3bcbbbe4b14bdfb520eb2bf7d038e31742b003c2",
+  "prompts": {},
+  "sessions": {
+    "s_f494296567c8ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ed2362f42ffe2vXHXdAKZuK7Lm",
+        "model": "accounts/fireworks/routers/kimi-latest"
+      },
+      "human_author": "Xav Paice <xav@replicated.com>"
+    }
+  }
+}
