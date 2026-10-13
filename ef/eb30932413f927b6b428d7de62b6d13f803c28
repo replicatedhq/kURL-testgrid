@@ -1,0 +1,26 @@
+tgapi/pkg/handlers/get_run.go
+  s_f494296567c8ff::t_2c9ae62d915b6d 27-30
+  s_f494296567c8ff::t_421d382e794553 70-76,81
+tgapi/pkg/testinstance/testinstance.go
+  s_f494296567c8ff::t_907c31142f1b1e 302-317
+web/src/components/containers/Run.jsx
+  s_f494296567c8ff::t_77e812c201e118 20
+  s_f494296567c8ff::t_a7880ffa673d3d 159
+  s_f494296567c8ff::t_81dec22345619c 61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "efeb30932413f927b6b428d7de62b6d13f803c28",
+  "prompts": {},
+  "sessions": {
+    "s_f494296567c8ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ed2362f42ffe2vXHXdAKZuK7Lm",
+        "model": "accounts/fireworks/routers/kimi-latest"
+      },
+      "human_author": "Xav Paice <xav@replicated.com>"
+    }
+  }
+}
