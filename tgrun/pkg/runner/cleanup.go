@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	cleanupAfterMinutes = 90
-	timeoutAfterMinutes = 480
+	cleanupAfterMinutes         = 90
+	timeoutAfterMinutes         = 480
+	sendlogsCleanupAfterMinutes = 30
 )
 
 // CleanUpVMIs deletes "Succeeded" VMIs
@@ -79,6 +80,22 @@ func CleanUpVMIs() error {
 			}
 		}
 
+		// -sendlogs VMIs are meant to live for minutes; one stuck in Running
+		// otherwise rides the much longer timeoutAfterMinutes path and holds
+		// a VM slot for hours (sc-140012). Reap it on its own short leash,
+		// regardless of phase checks below, so stuck log shipping doesn't
+		// silently eat fleet capacity.
+		if shouldReapStuckSendlogs(vmi) {
+			fmt.Printf("Reaping stuck sendlogs vmi %s: running past the %dm sendlogs leash without finishing log shipping\n", vmi.Name, sendlogsCleanupAfterMinutes)
+			err := virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi.Name, metav1.DeleteOptions{})
+			if err != nil {
+				fmt.Printf("Failed to delete stuck sendlogs vmi %s: %v\n", vmi.Name, err)
+			} else {
+				fmt.Printf("Deleted stuck sendlogs vmi %s\n", vmi.Name)
+			}
+			continue
+		}
+
 		// cleanup VMIs that are not running and have not succeeded after 1.5 hours (cleanupAfterMinutes)
 		// or VMIs that are running and have not succeeded after 5 hours (timeoutAfterMinutes)
 		// the in-script timeout for install is 30m, upgrade is 180m
@@ -118,6 +135,19 @@ func CleanUpVMIs() error {
 	}
 
 	return nil
+}
+
+// shouldReapStuckSendlogs reports whether a "-sendlogs" VMI has been Running
+// past its own short leash (sendlogsCleanupAfterMinutes) and should be reaped
+// regardless of phase, independent of the general cleanupIsTimeout path.
+func shouldReapStuckSendlogs(vmi kubevirtv1.VirtualMachineInstance) bool {
+	if !strings.HasSuffix(vmi.Name, "sendlogs") {
+		return false
+	}
+	if vmi.Status.Phase != kubevirtv1.Running {
+		return false
+	}
+	return time.Since(vmi.CreationTimestamp.Time).Minutes() > sendlogsCleanupAfterMinutes
 }
 
 // cleanup VMIs that are not running and have not succeeded after 1.5 hours (cleanupAfterMinutes)
