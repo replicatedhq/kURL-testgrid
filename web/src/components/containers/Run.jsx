@@ -17,6 +17,7 @@ const Run = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [cancellableCount, setCancellableCount] = useState(0);
   const [instancesMap, setInstancesMap] = useState({});
   const [addons, setAddons] = useState({});
   const [totalCount, setTotalCount] = useState(0);
@@ -57,6 +58,7 @@ const Run = () => {
       setIsLoading(false);
       setInstancesMap(groupBy(resJson.instances, "testId"));
       setTotalCount(resJson.total);
+      setCancellableCount(resJson.cancellable_count);
 
       return true;
     } catch(err) {
@@ -146,11 +148,6 @@ const Run = () => {
     );
   }
 
-  // a run is cancellable while any of its instances is pending or running (i.e. not finished)
-  const hasCancellableInstances = Object.values(instancesMap).some(testInstances =>
-    testInstances.some(instance => !instance.finishedAt)
-  );
-
   return (
     <div className="RunContainer">
       <div className="flex alignItems--center u-borderBottom--gray u-marginBottom--20 u-paddingBottom--small">
@@ -159,7 +156,7 @@ const Run = () => {
           <span className="u-color--astral">Runs</span>
         </div>
         <span className="u-fontSize--jumbo2 u-fontWeight--bold u-color--tuna">kURL Test Run: {`${params.runId}`}</span>
-        {hasCancellableInstances &&
+        {cancellableCount > 0 &&
           <div className="flex1 flex justifyContent--flexEnd">
             <button type="button" className="btn secondary red" onClick={cancelRun} disabled={isCancelling}>
               {isCancelling ? "Cancelling…" : "Cancel Run"}

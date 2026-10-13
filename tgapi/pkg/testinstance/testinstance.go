@@ -299,6 +299,22 @@ func IsCancelled(ctx context.Context, id string) (bool, error) {
 	return cancelled, nil
 }
 
+// CountUnfinished returns the number of a run's instances that are pending or
+// running (i.e. cancellable), independent of API pagination.
+func CountUnfinished(ctx context.Context, refID string) (int64, error) {
+	db := persistence.MustGetPGSession()
+
+	query := `select count(1) from testinstance where testrun_ref = $1 and finished_at is null`
+	row := db.QueryRowContext(ctx, query, refID)
+
+	var count int64
+	if err := row.Scan(&count); err != nil {
+		return -1, errors.Wrap(err, "failed to scan")
+	}
+
+	return count, nil
+}
+
 // cancelledFeedWindow is how far back the runner-facing cancelled instance
 // feed looks. Hosts reconcile every 30s; the 24h window tolerates long host
 // outages, and the age-based VMI timeout cleanup remains the backstop beyond
