@@ -71,7 +71,9 @@ func getCancelledInstanceIDs(apiEndpoint string) (map[string]bool, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	// the feed is a small list of instance IDs; cap the read so a hostile or
+	// broken server cannot exhaust memory
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read body")
 	}

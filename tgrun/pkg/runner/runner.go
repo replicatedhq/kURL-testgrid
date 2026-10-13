@@ -79,7 +79,7 @@ func isInstanceCancelled(apiEndpoint, id string) (bool, error) {
 	}
 
 	cancelledResponse := tghandlers.GetInstanceCancelledResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(&cancelledResponse); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<16)).Decode(&cancelledResponse); err != nil {
 		return false, errors.Wrap(err, "failed to decode response")
 	}
 

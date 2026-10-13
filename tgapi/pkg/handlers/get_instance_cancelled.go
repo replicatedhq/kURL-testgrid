@@ -18,7 +18,7 @@ type GetInstanceCancelledResponse struct {
 func GetInstanceCancelled(w http.ResponseWriter, r *http.Request) {
 	instanceID := mux.Vars(r)["instanceId"]
 
-	cancelled, err := testinstance.IsCancelled(instanceID)
+	cancelled, err := testinstance.IsCancelled(r.Context(), instanceID)
 	if err != nil {
 		logger.Error(err)
 		JSON(w, 500, nil)

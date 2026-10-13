@@ -32,7 +32,7 @@ func CancelRef(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("cancelRef",
 		zap.String("refId", refID))
 
-	pendingCancelled, runningCancelled, err := testinstance.CancelByRef(refID)
+	pendingCancelled, runningCancelled, err := testinstance.CancelByRef(r.Context(), refID)
 	if err != nil {
 		logger.Error(err)
 		JSON(w, 500, nil)

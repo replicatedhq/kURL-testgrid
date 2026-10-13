@@ -19,7 +19,7 @@ type ListCancelledResponse struct {
 // Runner hosts poll this and delete local VMs/PVCs/secrets whose instance has
 // been cancelled.
 func ListCancelled(w http.ResponseWriter, r *http.Request) {
-	ids, err := testinstance.ListRecentlyCancelledIDs()
+	ids, err := testinstance.ListRecentlyCancelledIDs(r.Context())
 	if err != nil {
 		logger.Error(err)
 		JSON(w, 500, nil)

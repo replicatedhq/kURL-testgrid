@@ -25,7 +25,7 @@ func CancelInstance(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("cancelInstance",
 		zap.String("instanceId", instanceID))
 
-	if err := testinstance.CancelInstance(instanceID); err != nil {
+	if err := testinstance.CancelInstance(r.Context(), instanceID); err != nil {
 		logger.Error(err)
 		JSON(w, 500, nil)
 		return

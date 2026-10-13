@@ -1,6 +1,7 @@
 package testinstance
 
 import (
+	"context"
 	"crypto/md5"
 	"database/sql"
 	"fmt"
@@ -208,7 +209,7 @@ where dequeued_at is null and testrun_ref = $1`
 
 // cancelPending skips instances that have not been dequeued yet, permanently
 // removing them from the runner queue. The whereClause must reference $1.
-func cancelPending(whereClause string, arg interface{}) (int64, error) {
+func cancelPending(ctx context.Context, whereClause string, arg interface{}) (int64, error) {
 	db := persistence.MustGetPGSession()
 
 	query := fmt.Sprintf(`
@@ -217,7 +218,7 @@ is_success = false, is_skipped = true, cancelled_at = now(),
 dequeued_at = now(), started_at = now(), running_at = now(), finished_at = now()
 where dequeued_at is null and %s`, whereClause)
 
-	result, err := db.Exec(query, arg)
+	result, err := db.ExecContext(ctx, query, arg)
 	if err != nil {
 		return 0, errors.Wrap(err, "cancel pending instances")
 	}
@@ -232,7 +233,7 @@ where dequeued_at is null and %s`, whereClause)
 // cancelRunning marks running instances finished with a cancelled_at
 // timestamp, which runner hosts poll to reconcile (delete) their local VMs.
 // The whereClause must reference $1.
-func cancelRunning(whereClause string, arg interface{}) (int64, error) {
+func cancelRunning(ctx context.Context, whereClause string, arg interface{}) (int64, error) {
 	db := persistence.MustGetPGSession()
 
 	query := fmt.Sprintf(`
@@ -240,7 +241,7 @@ update testinstance set
 is_success = false, failure_reason = 'cancelled', cancelled_at = now(), finished_at = now()
 where dequeued_at is not null and finished_at is null and %s`, whereClause)
 
-	result, err := db.Exec(query, arg)
+	result, err := db.ExecContext(ctx, query, arg)
 	if err != nil {
 		return 0, errors.Wrap(err, "cancel running instances")
 	}
@@ -254,13 +255,13 @@ where dequeued_at is not null and finished_at is null and %s`, whereClause)
 
 // CancelByRef cancels all pending and running instances of a run.
 // It returns the number of pending and running instances cancelled.
-func CancelByRef(refID string) (int64, int64, error) {
-	pendingCancelled, err := cancelPending("testrun_ref = $1", refID)
+func CancelByRef(ctx context.Context, refID string) (int64, int64, error) {
+	pendingCancelled, err := cancelPending(ctx, "testrun_ref = $1", refID)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	runningCancelled, err := cancelRunning("testrun_ref = $1", refID)
+	runningCancelled, err := cancelRunning(ctx, "testrun_ref = $1", refID)
 	if err != nil {
 		return pendingCancelled, 0, err
 	}
@@ -270,22 +271,22 @@ func CancelByRef(refID string) (int64, int64, error) {
 
 // CancelInstance cancels a single pending or running instance.
 // See CancelByRef for the state transition semantics.
-func CancelInstance(id string) error {
-	if _, err := cancelPending("id = $1", id); err != nil {
+func CancelInstance(ctx context.Context, id string) error {
+	if _, err := cancelPending(ctx, "id = $1", id); err != nil {
 		return err
 	}
-	if _, err := cancelRunning("id = $1", id); err != nil {
+	if _, err := cancelRunning(ctx, "id = $1", id); err != nil {
 		return err
 	}
 	return nil
 }
 
 // IsCancelled reports whether an instance has been cancelled.
-func IsCancelled(id string) (bool, error) {
+func IsCancelled(ctx context.Context, id string) (bool, error) {
 	db := persistence.MustGetPGSession()
 
 	query := `select cancelled_at is not null from testinstance where id = $1`
-	row := db.QueryRow(query, id)
+	row := db.QueryRowContext(ctx, query, id)
 
 	var cancelled bool
 	if err := row.Scan(&cancelled); err != nil {
@@ -308,12 +309,12 @@ const cancelledFeedWindow = "24 hours"
 // cancelledFeedWindow. Runner hosts poll this to delete local VMs whose
 // instance has been cancelled. Skipped instances are excluded: they were
 // cancelled while pending, so no host ever created resources for them.
-func ListRecentlyCancelledIDs() ([]string, error) {
+func ListRecentlyCancelledIDs(ctx context.Context) ([]string, error) {
 	db := persistence.MustGetPGSession()
 
 	query := fmt.Sprintf(`select id from testinstance where cancelled_at is not null and is_skipped is not true and cancelled_at > now() - interval '%s'`, cancelledFeedWindow)
 
-	rows, err := db.Query(query)
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to query")
 	}
@@ -326,6 +327,9 @@ func ListRecentlyCancelledIDs() ([]string, error) {
 			return nil, errors.Wrap(err, "failed to scan")
 		}
 		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "failed to iterate rows")
 	}
 
 	return ids, nil
