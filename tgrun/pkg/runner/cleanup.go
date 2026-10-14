@@ -16,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	kubevirtv1 "kubevirt.io/api/core/v1"
+	"kubevirt.io/client-go/kubecli"
 )
 
 const (
@@ -31,6 +32,10 @@ func CleanUpVMIs() error {
 		return errors.Wrap(err, "failed to get clientset")
 	}
 
+	return cleanUpVMIs(virtClient)
+}
+
+func cleanUpVMIs(virtClient kubecli.KubevirtClient) error {
 	vmiList, err := virtClient.VirtualMachineInstance(Namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to list vmis")
@@ -86,12 +91,19 @@ func CleanUpVMIs() error {
 		// regardless of phase checks below, so stuck log shipping doesn't
 		// silently eat fleet capacity.
 		if shouldReapStuckSendlogs(vmi) {
-			fmt.Printf("Reaping stuck sendlogs vmi %s: running past the %dm sendlogs leash without finishing log shipping\n", vmi.Name, sendlogsCleanupAfterMinutes)
+			reason := "without finishing log shipping"
+			if vmi.Status.Phase == kubevirtv1.Succeeded {
+				reason = "after finishing log shipping"
+			}
+			fmt.Printf("Reaping stuck sendlogs vmi %s: running past the %dm sendlogs leash %s\n", vmi.Name, sendlogsCleanupAfterMinutes, reason)
 			err := virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi.Name, metav1.DeleteOptions{})
-			if err != nil {
-				fmt.Printf("Failed to delete stuck sendlogs vmi %s: %v\n", vmi.Name, err)
-			} else {
+			switch {
+			case err == nil:
 				fmt.Printf("Deleted stuck sendlogs vmi %s\n", vmi.Name)
+			case apierrors.IsNotFound(err):
+				// already deleted earlier in this pass (e.g. by the succeeded-cleanup path above)
+			default:
+				fmt.Printf("Failed to delete stuck sendlogs vmi %s: %v\n", vmi.Name, err)
 			}
 			continue
 		}
