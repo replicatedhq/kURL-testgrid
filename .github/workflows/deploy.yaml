@@ -51,6 +51,7 @@ jobs:
           kustomize edit set image "kxb4bdmwmg.registry.depot.dev/nzh4z2519m/tgapi:${GITHUB_SHA:0:7}"
           kustomize build . > testgrid.yaml
           popd
+          kustomize build "migrations/kustomize/overlays/latitude-${environment}" > "kustomize/overlays/latitude-${environment}/testgrid-schema.yaml"
         done
 
     - name: ssh-key
@@ -68,9 +69,10 @@ jobs:
         cd ~ && git clone --single-branch -b main git@github.com:replicatedhq/gitops-deploy
         cd ~/gitops-deploy
         for environment in staging production; do
-          mkdir -p "${environment}/applications"
+          mkdir -p "${environment}/applications" "${environment}/schemas"
           cp "${GITHUB_WORKSPACE}/kustomize/overlays/latitude-${environment}/testgrid.yaml" "${environment}/applications/testgrid.yaml"
-          git add "${environment}/applications/testgrid.yaml"
+          cp "${GITHUB_WORKSPACE}/kustomize/overlays/latitude-${environment}/testgrid-schema.yaml" "${environment}/schemas/testgrid.yaml"
+          git add "${environment}/applications/testgrid.yaml" "${environment}/schemas/testgrid.yaml"
         done
         git config user.email "kurl-github-actions@replicated.com"
         git config user.name "kURL GitHub Actions"
