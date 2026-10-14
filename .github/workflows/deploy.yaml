@@ -5,30 +5,35 @@ on:
     branches:
     - main
 
+# Serialize releases so an older build cannot overwrite a newer deployment.
+concurrency:
+  group: deploy-testgrid-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  staging-docker-image-tgapi:
+  docker-image-tgapi:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
 
     - run: |
         docker build -f tgapi/deploy/Dockerfile \
-          --build-arg gitsha=${GITHUB_SHA:0:7} \
+          --build-arg "gitsha=${GITHUB_SHA:0:7}" \
           --build-arg buildtime="$(date --rfc-3339=seconds | sed 's/ /T/')" \
-          -t 923411875752.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7} \
+          -t "kxb4bdmwmg.registry.depot.dev/nzh4z2519m/tgapi:${GITHUB_SHA:0:7}" \
           .
 
     - uses: docker/login-action@v4
       with:
-        registry: 923411875752.dkr.ecr.us-east-1.amazonaws.com
-        username: ${{ secrets.STAGING_ECR_AWS_ACCESS_KEY_ID_SELECT }}
-        password: ${{ secrets.STAGING_ECR_AWS_SECRET_ACCESS_KEY_SELECT }}
+        registry: kxb4bdmwmg.registry.depot.dev
+        username: x-token
+        password: ${{ secrets.DEPOT_REGISTRY_TOKEN }}
 
-    - run: docker push 923411875752.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7}
+    - run: docker push "kxb4bdmwmg.registry.depot.dev/nzh4z2519m/tgapi:${GITHUB_SHA:0:7}"
 
-  deploy-staging-eks-tgapi:
+  deploy-latitude-tgapi:
     runs-on: ubuntu-latest
-    needs: staging-docker-image-tgapi
+    needs: docker-image-tgapi
     steps:
     - uses: actions/checkout@v7
 
@@ -41,14 +46,17 @@ jobs:
           xargs sudo curl -O -L && \
           sudo mv kustomize_*_linux_amd64 /usr/local/bin/kustomize && \
           sudo chmod +x /usr/local/bin/kustomize
-        pushd kustomize/overlays/staging
-        kustomize edit set image 923411875752.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7}
-        kustomize build . > testgrid.yaml
-        popd
+        for environment in staging production; do
+          pushd "kustomize/overlays/latitude-${environment}"
+          kustomize edit set image "kxb4bdmwmg.registry.depot.dev/nzh4z2519m/tgapi:${GITHUB_SHA:0:7}"
+          kustomize build . > testgrid.yaml
+          popd
+          kustomize build "migrations/kustomize/overlays/latitude-${environment}" > "kustomize/overlays/latitude-${environment}/testgrid-schema.yaml"
+        done
 
     - name: ssh-key
       env:
-        GITOPS_DEPLOY_KEY: ${{ secrets.GITOPS_DEPLOY_KEY }}
+        GITOPS_DEPLOY_KEY: ${{ secrets.LATITUDE_GITOPS_DEPLOY_KEY }}
       run: |
         mkdir -p ~/.ssh
         echo "$GITOPS_DEPLOY_KEY" > ~/.ssh/id_rsa
@@ -58,35 +66,28 @@ jobs:
 
     - name: release
       run: |
-        cd ~ && git clone --single-branch -b main git@github.com:replicatedcom/gitops-deploy
-        mkdir -p ~/gitops-deploy/testgrid
-        mv ${GITHUB_WORKSPACE}/kustomize/overlays/staging/testgrid.yaml gitops-deploy/testgrid/testgrid.yaml
+        cd ~ && git clone --single-branch -b main git@github.com:replicatedhq/gitops-deploy
         cd ~/gitops-deploy
+        for environment in staging production; do
+          mkdir -p "${environment}/applications" "${environment}/schemas"
+          cp "${GITHUB_WORKSPACE}/kustomize/overlays/latitude-${environment}/testgrid.yaml" "${environment}/applications/testgrid.yaml"
+          cp "${GITHUB_WORKSPACE}/kustomize/overlays/latitude-${environment}/testgrid-schema.yaml" "${environment}/schemas/testgrid.yaml"
+          git add "${environment}/applications/testgrid.yaml" "${environment}/schemas/testgrid.yaml"
+        done
         git config user.email "kurl-github-actions@replicated.com"
         git config user.name "kURL GitHub Actions"
-        git add .
-        git commit --allow-empty -m "https://github.com/replicatedhq/kURL-testgrid/actions/runs/${GITHUB_RUN_ID}" && \
-          git push origin main
-
-  production-docker-image-tgapi:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v7
-
-    - run: |
-        docker build -f tgapi/deploy/Dockerfile \
-          --build-arg gitsha=${GITHUB_SHA:0:7} \
-          --build-arg buildtime="$(date --rfc-3339=seconds | sed 's/ /T/')" \
-          -t 799720048698.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7} \
-          .
-
-    - uses: docker/login-action@v4
-      with:
-        registry: 799720048698.dkr.ecr.us-east-1.amazonaws.com
-        username: ${{ secrets.PRODUCTION_ECR_AWS_ACCESS_KEY_ID_SELECT }}
-        password: ${{ secrets.PRODUCTION_ECR_AWS_SECRET_ACCESS_KEY_SELECT }}
-
-    - run: docker push 799720048698.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7}
+        if git diff --cached --quiet; then
+          exit 0
+        fi
+        git commit -m "https://github.com/replicatedhq/kURL-testgrid/actions/runs/${GITHUB_RUN_ID}"
+        for attempt in 1 2 3 4 5; do
+          git pull --rebase origin main
+          if git push origin main; then
+            exit 0
+          fi
+          sleep "$((attempt * 2))"
+        done
+        exit 1
 
   docker-image-tgrun:
     runs-on: ubuntu-latest
@@ -95,10 +96,10 @@ jobs:
       - name: tgrun-build
         run: |
           docker build -f tgrun/Dockerfile \
-            --build-arg gitsha=${GITHUB_SHA:0:7} \
+            --build-arg "gitsha=${GITHUB_SHA:0:7}" \
             --build-arg buildtime="$(date --rfc-3339=seconds | sed 's/ /T/')" \
             -t replicated/tgrun:latest \
-            -t replicated/tgrun:${GITHUB_SHA:0:7} \
+            -t "replicated/tgrun:${GITHUB_SHA:0:7}" \
             .
       - uses: docker/login-action@v4
         with:
@@ -108,46 +109,4 @@ jobs:
       - name: tgrun-push
         run: |
           docker push replicated/tgrun:latest
-          docker push replicated/tgrun:${GITHUB_SHA:0:7}
-
-  deploy-production-eks-tgapi:
-    runs-on: ubuntu-latest
-    needs: production-docker-image-tgapi
-    steps:
-    - uses: actions/checkout@v7
-
-    - name: kustomize
-      run: |
-        curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/tags/v2.0.0 | \
-          grep browser_download | \
-          grep linux | \
-          cut -d '"' -f 4 | \
-          xargs sudo curl -O -L && \
-          sudo mv kustomize_*_linux_amd64 /usr/local/bin/kustomize && \
-          sudo chmod +x /usr/local/bin/kustomize
-        pushd kustomize/overlays/production
-        kustomize edit set image 799720048698.dkr.ecr.us-east-1.amazonaws.com/tgapi:${GITHUB_SHA:0:7}
-        kustomize build . > testgrid.yaml
-        popd
-
-    - name: ssh-key
-      env:
-        GITOPS_DEPLOY_KEY: ${{ secrets.GITOPS_DEPLOY_KEY }}
-      run: |
-        mkdir -p ~/.ssh
-        echo "$GITOPS_DEPLOY_KEY" > ~/.ssh/id_rsa
-        chmod 400 ~/.ssh/id_rsa
-        echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' \
-          >> ~/.ssh/known_hosts
-
-    - name: release
-      run: |
-        cd ~ && git clone --single-branch -b release git@github.com:replicatedcom/gitops-deploy
-        mkdir -p ~/gitops-deploy/testgrid
-        mv ${GITHUB_WORKSPACE}/kustomize/overlays/production/testgrid.yaml gitops-deploy/testgrid/testgrid.yaml
-        cd ~/gitops-deploy
-        git config user.email "kurl-github-actions@replicated.com"
-        git config user.name "kURL GitHub Actions"
-        git add .
-        git commit --allow-empty -m "https://github.com/replicatedhq/kURL-testgrid/actions/runs/${GITHUB_RUN_ID}" && \
-          git push origin release
+          docker push "replicated/tgrun:${GITHUB_SHA:0:7}"

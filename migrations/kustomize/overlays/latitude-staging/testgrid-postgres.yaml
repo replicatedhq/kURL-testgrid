@@ -1,0 +1,16 @@
+apiVersion: databases.schemahero.io/v1alpha4
+kind: Database
+metadata:
+  name: testgrid-postgres
+spec:
+  immediateDeploy: true
+  schemahero:
+    nodeSelector:
+      replicated.com/rke2-role: worker
+  connection:
+    postgres:
+      uri:
+        valueFrom:
+          secretKeyRef:
+            key: uri
+            name: testgrid-postgres

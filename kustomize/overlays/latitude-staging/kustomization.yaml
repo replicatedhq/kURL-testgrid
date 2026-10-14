@@ -1,0 +1,5 @@
+# Application resources only. The deploy workflow publishes migration overlays
+# separately to schemas/testgrid.yaml; database infrastructure and secrets live in GitOps.
+bases:
+  - ../../../tgapi/kustomize/overlays/latitude-staging
+namespace: default
