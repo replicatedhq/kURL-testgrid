@@ -17,9 +17,10 @@ if ! timeout 90 bash -c "$(declare -f send_logs); send_logs"; then
   echo "send_logs timed out or failed after 90s" >> /var/log/cloud-init-output.log
   # The line above is written to the same file send_logs just failed to ship, so without a
   # follow-up attempt it would never reach the API. Make one more attempt so the failure note
-  # itself gets uploaded instead of being stranded on disk. The outer bound must exceed
-  # send_logs' own curl --max-time (60s), otherwise this timeout always fires first and kills
-  # a slow-but-otherwise-successful upload before curl's own flags get a chance to succeed or
+  # itself gets uploaded instead of being stranded on disk. The outer bound must exceed curl's
+  # own worst-case duration -- --connect-timeout (10s) plus --max-time (60s), i.e. 70s -- not
+  # just --max-time alone, otherwise this timeout can still fire first and kill a
+  # slow-but-otherwise-successful upload before curl's own flags get a chance to succeed or
   # fail cleanly.
-  timeout 65 bash -c "$(declare -f send_logs); send_logs" || true
+  timeout 75 bash -c "$(declare -f send_logs); send_logs" || true
 fi
