@@ -1,0 +1,4 @@
+# Database resources and secrets are managed by the Latitude GitOps repository.
+bases:
+  - ../../../tgapi/kustomize/overlays/latitude-production
+namespace: default

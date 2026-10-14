@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tgapi
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        replicated.com/database: testgrid-postgres.default.svc.cluster.local
+    spec:
+      containers:
+      - env:
+        - name: AWS_REGION
+          value: us-east-1
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: AWS_ACCESS_KEY_ID
+              name: aws-credentials
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: AWS_SECRET_ACCESS_KEY
+              name: aws-credentials
+        - name: PROJECT_NAME
+          value: kurl
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              key: uri
+              name: testgrid-postgres
+        - name: SUPPORT_BUNDLE_BUCKET
+          value: testgrid-bundles-production
+        - name: GOMEMLIMIT
+          value: 500MiB
+        envFrom:
+        - secretRef:
+            name: tgapi
+        image: kxb4bdmwmg.registry.depot.dev/nzh4z2519m/tgapi
+        name: tgapi
+        resources:
+          requests:
+            cpu: 100m
+            memory: 750Mi
+      imagePullSecrets:
+      - name: depot-registry-credentials
+      nodeSelector:
+        replicated.com/rke2-role: worker
