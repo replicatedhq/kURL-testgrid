@@ -95,10 +95,14 @@ func cleanUpVMIs(virtClient kubecli.KubevirtClient) error {
 			if vmi.Status.Phase == kubevirtv1.Succeeded {
 				reason = "after finishing log shipping"
 			}
-			fmt.Printf("Reaping stuck sendlogs vmi %s: running past the %dm sendlogs leash %s\n", vmi.Name, sendlogsCleanupAfterMinutes, reason)
 			err := virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi.Name, metav1.DeleteOptions{})
 			switch {
 			case err == nil:
+				// Only log "Reaping" once we know there was something to reap: a
+				// Succeeded sendlogs VMI already removed by the succeeded-cleanup
+				// path above hits the IsNotFound case below instead, so this line
+				// never misreports a no-op second pass as a reap.
+				fmt.Printf("Reaping stuck sendlogs vmi %s: running past the %dm sendlogs leash %s\n", vmi.Name, sendlogsCleanupAfterMinutes, reason)
 				fmt.Printf("Deleted stuck sendlogs vmi %s\n", vmi.Name)
 			case apierrors.IsNotFound(err):
 				// already deleted earlier in this pass (e.g. by the succeeded-cleanup path above)

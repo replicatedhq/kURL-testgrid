@@ -7,29 +7,32 @@ import (
 )
 
 // TestFinalizeLogsRetryTimeoutExceedsCurlBudget guards against sc-140012
-// regressing: the retry's outer `timeout` must exceed curl's own worst-case
-// duration (--connect-timeout + --max-time), otherwise the outer timeout
-// fires first and kills the very upload the retry exists to rescue.
+// regressing: every outer `timeout` wrapping send_logs -- the first attempt
+// as well as the retry -- must exceed curl's own worst-case duration
+// (--connect-timeout + --max-time), otherwise the outer timeout fires first
+// and kills the very upload it wraps.
 func TestFinalizeLogsRetryTimeoutExceedsCurlBudget(t *testing.T) {
 	script := string(finalizeLogs)
 
 	connectTimeout := mustExtractInt(t, script, `--connect-timeout\s+(\d+)`)
 	maxTime := mustExtractInt(t, script, `--max-time\s+(\d+)`)
-
-	retryTimeoutRe := regexp.MustCompile(`timeout\s+(\d+)\s+bash[^\n]*send_logs"\s*\|\|\s*true`)
-	match := retryTimeoutRe.FindStringSubmatch(script)
-	if match == nil {
-		t.Fatalf("could not find retry timeout statement in finalizelogs.sh")
-	}
-	retryTimeout, err := strconv.Atoi(match[1])
-	if err != nil {
-		t.Fatalf("could not parse retry timeout %q: %v", match[1], err)
-	}
-
 	curlBudget := connectTimeout + maxTime
-	if retryTimeout <= curlBudget {
-		t.Fatalf("retry timeout %ds does not exceed curl's worst-case budget %ds (connect-timeout %ds + max-time %ds); the outer timeout will always fire first",
-			retryTimeout, curlBudget, connectTimeout, maxTime)
+
+	timeoutRe := regexp.MustCompile(`timeout\s+(\d+)\s+bash[^\n]*send_logs"`)
+	matches := timeoutRe.FindAllStringSubmatch(script, -1)
+	if len(matches) < 2 {
+		t.Fatalf("expected to find both the first attempt's and the retry's timeout statements in finalizelogs.sh, found %d", len(matches))
+	}
+
+	for _, match := range matches {
+		timeoutSeconds, err := strconv.Atoi(match[1])
+		if err != nil {
+			t.Fatalf("could not parse timeout %q: %v", match[1], err)
+		}
+		if timeoutSeconds <= curlBudget {
+			t.Fatalf("timeout %ds does not exceed curl's worst-case budget %ds (connect-timeout %ds + max-time %ds); the outer timeout will always fire first",
+				timeoutSeconds, curlBudget, connectTimeout, maxTime)
+		}
 	}
 }
 
