@@ -43,9 +43,14 @@ func Test_shouldReapStuckSendlogs(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "sendlogs succeeded 31m is not reaped by this path",
+			name: "sendlogs succeeded 31m is reaped regardless of phase",
 			vmi:  vmiWithAge("abc123-sendlogs", kubevirtv1.Succeeded, 31*time.Minute),
-			want: false,
+			want: true,
+		},
+		{
+			name: "sendlogs scheduling 31m is reaped regardless of phase",
+			vmi:  vmiWithAge("abc123-sendlogs", kubevirtv1.Scheduling, 31*time.Minute),
+			want: true,
 		},
 	}
 	for _, tt := range tests {

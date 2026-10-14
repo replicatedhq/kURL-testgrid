@@ -137,14 +137,11 @@ func CleanUpVMIs() error {
 	return nil
 }
 
-// shouldReapStuckSendlogs reports whether a "-sendlogs" VMI has been Running
-// past its own short leash (sendlogsCleanupAfterMinutes) and should be reaped
+// shouldReapStuckSendlogs reports whether a "-sendlogs" VMI is older than its
+// own short leash (sendlogsCleanupAfterMinutes) and should be reaped
 // regardless of phase, independent of the general cleanupIsTimeout path.
 func shouldReapStuckSendlogs(vmi kubevirtv1.VirtualMachineInstance) bool {
 	if !strings.HasSuffix(vmi.Name, "sendlogs") {
-		return false
-	}
-	if vmi.Status.Phase != kubevirtv1.Running {
 		return false
 	}
 	return time.Since(vmi.CreationTimestamp.Time).Minutes() > sendlogsCleanupAfterMinutes
