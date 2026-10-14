@@ -16,6 +16,9 @@ spec:
         - name: idx_testinstance_testrun_ref
           columns:
             - testrun_ref
+        - name: idx_testinstance_cancelled_at
+          columns:
+            - cancelled_at
       columns:
         - name: id
           type: varchar(255)
@@ -48,6 +51,8 @@ spec:
           type: boolean
         - name: is_skipped
           type: boolean
+        - name: cancelled_at
+          type: timestamp without timezone
         - name: output
           type: text
         - name: sonobuoy_results

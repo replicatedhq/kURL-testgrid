@@ -24,6 +24,10 @@ type GetRunResponse struct {
 	LastResponse *time.Time           `json:"last_response"`
 	SuccessCount int64                `json:"success_count"` // success_count plus failure_count will not always equal total due to unsupported instances
 	FailureCount int64                `json:"failure_count"`
+	// CancellableCount is the number of pending or running instances across
+	// the whole run (not just the loaded page); the UI shows the cancel
+	// button while this is positive.
+	CancellableCount int64 `json:"cancellable_count"`
 }
 
 type GetStatusResponse struct {
@@ -63,10 +67,18 @@ func GetRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cancellableCount, err := testinstance.CountUnfinished(r.Context(), mux.Vars(r)["refId"])
+	if err != nil {
+		logger.Error(err)
+		JSON(w, 500, nil)
+		return
+	}
+
 	getRunResponse := GetRunResponse{}
 
 	getRunResponse.Instances = instances
 	getRunResponse.Total = total
+	getRunResponse.CancellableCount = cancellableCount
 
 	// calculate the last completed test run and the number of successes/failures
 	for _, instance := range instances {
@@ -80,7 +92,7 @@ func GetRun(w http.ResponseWriter, r *http.Request) {
 				getRunResponse.LastStart = instance.StartedAt
 			}
 		}
-		if !instance.IsUnsupported && !instance.IsSkipped && instance.FinishedAt != nil {
+		if !instance.IsUnsupported && !instance.IsSkipped && instance.CancelledAt == nil && instance.FinishedAt != nil {
 			if instance.IsSuccess {
 				getRunResponse.SuccessCount++
 			} else {

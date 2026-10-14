@@ -16,6 +16,8 @@ const Run = () => {
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancellableCount, setCancellableCount] = useState(0);
   const [instancesMap, setInstancesMap] = useState({});
   const [addons, setAddons] = useState({});
   const [totalCount, setTotalCount] = useState(0);
@@ -56,6 +58,7 @@ const Run = () => {
       setIsLoading(false);
       setInstancesMap(groupBy(resJson.instances, "testId"));
       setTotalCount(resJson.total);
+      setCancellableCount(resJson.cancellable_count);
 
       return true;
     } catch(err) {
@@ -109,6 +112,34 @@ const Run = () => {
     }
   }
 
+  const cancelRun = async () => {
+    if (!window.confirm(`Cancel run ${params.runId}?\n\nPending instances will be skipped and running VMs will be terminated on the runner hosts.`)) {
+      return;
+    }
+
+    try {
+      setIsCancelling(true);
+
+      const res = await fetch(`${window.env.API_ENDPOINT}/ref/${params.runId}/cancel`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        throw new Error(`cancel failed with status ${res.status}`);
+      }
+
+      const resJson = await res.json();
+      window.alert(`Cancelled ${resJson.pendingCancelled} pending and ${resJson.runningCancelled} running instances. Running VMs will be terminated within a minute.`);
+
+      await loadRunInstances();
+    } catch(err) {
+      console.error(err);
+      window.alert(`Failed to cancel run: ${err.message}`);
+    } finally {
+      setIsCancelling(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <div style={{ marginTop: 24 }}>
@@ -125,6 +156,13 @@ const Run = () => {
           <span className="u-color--astral">Runs</span>
         </div>
         <span className="u-fontSize--jumbo2 u-fontWeight--bold u-color--tuna">kURL Test Run: {`${params.runId}`}</span>
+        {cancellableCount > 0 &&
+          <div className="flex1 flex justifyContent--flexEnd">
+            <button type="button" className="btn secondary red" onClick={cancelRun} disabled={isCancelling}>
+              {isCancelling ? "Cancelling…" : "Cancel Run"}
+            </button>
+          </div>
+        }
       </div>
 
       {/* Addons search */}

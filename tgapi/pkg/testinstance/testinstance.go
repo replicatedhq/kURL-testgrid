@@ -1,6 +1,7 @@
 package testinstance
 
 import (
+	"context"
 	"crypto/md5"
 	"database/sql"
 	"fmt"
@@ -17,7 +18,7 @@ import (
 const testInstanceFields = `id, test_id, test_name, testrun_ref, kurl_yaml, kurl_url, kurl_flags, upgrade_yaml, ` +
 	`upgrade_url, num_primary_nodes, num_secondary_nodes, memory, cpu, supportbundle_yaml, pre_install_script, post_install_script, ` +
 	`post_upgrade_script, os_name, os_version, os_image, os_preinit, enqueued_at, dequeued_at, ` +
-	`started_at, finished_at, is_success, failure_reason, is_unsupported, is_skipped`
+	`started_at, finished_at, is_success, failure_reason, is_unsupported, is_skipped, cancelled_at`
 
 const MemoryDefault = "16Gi"
 const CPUDefault = "4"
@@ -142,10 +143,10 @@ func SetInstanceFinishedAndSuccess(id string, isSuccess bool, failureReason stri
 	var query string
 	if isSuccess || failureReason == "timeout" {
 		// Failure cannot change to success, and timeout cannot change anything.
-		query = `update testinstance set is_success = $2, finished_at = now(), failure_reason = $3 where id = $1 and finished_at is null`
+		query = `update testinstance set is_success = $2, finished_at = now(), failure_reason = $3 where id = $1 and finished_at is null and cancelled_at is null`
 	} else {
-		// Success can change to failure unless timeout.
-		query = `update testinstance set is_success = $2, finished_at = now(), failure_reason = $3 where id = $1`
+		// Success can change to failure unless timeout. Neither can change a cancellation.
+		query = `update testinstance set is_success = $2, finished_at = now(), failure_reason = $3 where id = $1 and cancelled_at is null`
 	}
 
 	if _, err := db.Exec(query, id, isSuccess, failureReason); err != nil {
@@ -206,6 +207,150 @@ where dequeued_at is null and testrun_ref = $1`
 	return nil
 }
 
+// cancelPending skips instances that have not been dequeued yet, permanently
+// removing them from the runner queue. The whereClause must reference $1.
+func cancelPending(ctx context.Context, whereClause string, arg interface{}) (int64, error) {
+	db := persistence.MustGetPGSession()
+
+	query := fmt.Sprintf(`
+update testinstance set
+is_success = false, is_skipped = true, cancelled_at = now(),
+dequeued_at = now(), started_at = now(), running_at = now(), finished_at = now()
+where dequeued_at is null and %s`, whereClause)
+
+	result, err := db.ExecContext(ctx, query, arg)
+	if err != nil {
+		return 0, errors.Wrap(err, "cancel pending instances")
+	}
+	pendingCancelled, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "get pending rows affected")
+	}
+
+	return pendingCancelled, nil
+}
+
+// cancelRunning marks running instances finished with a cancelled_at
+// timestamp, which runner hosts poll to reconcile (delete) their local VMs.
+// The whereClause must reference $1.
+func cancelRunning(ctx context.Context, whereClause string, arg interface{}) (int64, error) {
+	db := persistence.MustGetPGSession()
+
+	query := fmt.Sprintf(`
+update testinstance set
+is_success = false, failure_reason = 'cancelled', cancelled_at = now(), finished_at = now()
+where dequeued_at is not null and finished_at is null and %s`, whereClause)
+
+	result, err := db.ExecContext(ctx, query, arg)
+	if err != nil {
+		return 0, errors.Wrap(err, "cancel running instances")
+	}
+	runningCancelled, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "get running rows affected")
+	}
+
+	return runningCancelled, nil
+}
+
+// CancelByRef cancels all pending and running instances of a run.
+// It returns the number of pending and running instances cancelled.
+func CancelByRef(ctx context.Context, refID string) (int64, int64, error) {
+	pendingCancelled, err := cancelPending(ctx, "testrun_ref = $1", refID)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	runningCancelled, err := cancelRunning(ctx, "testrun_ref = $1", refID)
+	if err != nil {
+		return pendingCancelled, 0, err
+	}
+
+	return pendingCancelled, runningCancelled, nil
+}
+
+// CancelInstance cancels a single pending or running instance.
+// See CancelByRef for the state transition semantics.
+func CancelInstance(ctx context.Context, id string) error {
+	if _, err := cancelPending(ctx, "id = $1", id); err != nil {
+		return err
+	}
+	if _, err := cancelRunning(ctx, "id = $1", id); err != nil {
+		return err
+	}
+	return nil
+}
+
+// IsCancelled reports whether an instance has been cancelled.
+func IsCancelled(ctx context.Context, id string) (bool, error) {
+	db := persistence.MustGetPGSession()
+
+	query := `select cancelled_at is not null from testinstance where id = $1`
+	row := db.QueryRowContext(ctx, query, id)
+
+	var cancelled bool
+	if err := row.Scan(&cancelled); err != nil {
+		if errors.Cause(err) == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, errors.Wrap(err, "failed to scan")
+	}
+
+	return cancelled, nil
+}
+
+// CountUnfinished returns the number of a run's instances that are pending or
+// running (i.e. cancellable), independent of API pagination.
+func CountUnfinished(ctx context.Context, refID string) (int64, error) {
+	db := persistence.MustGetPGSession()
+
+	query := `select count(1) from testinstance where testrun_ref = $1 and finished_at is null`
+	row := db.QueryRowContext(ctx, query, refID)
+
+	var count int64
+	if err := row.Scan(&count); err != nil {
+		return -1, errors.Wrap(err, "failed to scan")
+	}
+
+	return count, nil
+}
+
+// cancelledFeedWindow is how far back the runner-facing cancelled instance
+// feed looks. Hosts reconcile every 30s; the 24h window tolerates long host
+// outages, and the age-based VMI timeout cleanup remains the backstop beyond
+// the window.
+const cancelledFeedWindow = "24 hours"
+
+// ListRecentlyCancelledIDs returns the IDs of instances cancelled within
+// cancelledFeedWindow. Runner hosts poll this to delete local VMs whose
+// instance has been cancelled. Skipped instances are excluded: they were
+// cancelled while pending, so no host ever created resources for them.
+func ListRecentlyCancelledIDs(ctx context.Context) ([]string, error) {
+	db := persistence.MustGetPGSession()
+
+	query := fmt.Sprintf(`select id from testinstance where cancelled_at is not null and is_skipped is not true and cancelled_at > now() - interval '%s'`, cancelledFeedWindow)
+
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to query")
+	}
+	defer rows.Close()
+
+	ids := []string{}
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, errors.Wrap(err, "failed to scan")
+		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "failed to iterate rows")
+	}
+
+	return ids, nil
+}
+
 // List returns a list of test instances.
 // Note: pagination (limit and offset) are applied to instances with distinct kurl URLs (instances with same kurl URL count as 1)
 func List(refID string, limit int, offset int, addons map[string]string) ([]types.TestInstance, error) {
@@ -256,7 +401,7 @@ func List(refID string, limit int, offset int, addons map[string]string) ([]type
 func rowToTestInstance(row scannable) (types.TestInstance, error) {
 	testInstance := types.TestInstance{}
 
-	var enqueuedAt, dequeuedAt, startedAt, finishedAt sql.NullTime
+	var enqueuedAt, dequeuedAt, startedAt, finishedAt, cancelledAt sql.NullTime
 	var isSuccess, isUnsupported, isSkipped sql.NullBool
 	var testID, testName, kurlFlags, upgradeYAML, upgradeURL, supportbundleYAML, preInstallScript, postInstallScript, postUpgradeScript, failureReason, osPreInit, memory, cpu sql.NullString
 	var numPrimaryNodes, numSecondaryNodes sql.NullInt64
@@ -290,6 +435,7 @@ func rowToTestInstance(row scannable) (types.TestInstance, error) {
 		&failureReason,
 		&isUnsupported,
 		&isSkipped,
+		&cancelledAt,
 	); err != nil {
 		return testInstance, errors.Wrap(err, "failed to scan")
 	}
@@ -305,6 +451,9 @@ func rowToTestInstance(row scannable) (types.TestInstance, error) {
 	}
 	if finishedAt.Valid {
 		testInstance.FinishedAt = &finishedAt.Time
+	}
+	if cancelledAt.Valid {
+		testInstance.CancelledAt = &cancelledAt.Time
 	}
 
 	testInstance.TestID = testID.String

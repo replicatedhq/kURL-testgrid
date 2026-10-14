@@ -34,6 +34,9 @@ func MainRunLoop(runnerOptions types.RunnerOptions) error {
 
 	go func() {
 		for {
+			if err := ReconcileCancelledVMIs(runnerOptions); err != nil {
+				fmt.Println("Cancelled VMI reconcile ERROR: ", err)
+			}
 			if err := CleanUpVMIs(); err != nil {
 				fmt.Println("VMI clean up ERROR: ", err)
 			}

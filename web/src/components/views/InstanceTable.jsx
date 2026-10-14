@@ -258,6 +258,9 @@ const InstanceTable = (props) => {
     if (!instance) {
       return "";
     }
+    if (instance.cancelledAt) {
+      return "Cancelled";
+    }
     if (instance.finishedAt) {
       if (instance.isUnsupported) {
         return "Unsupported";

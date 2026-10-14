@@ -15,6 +15,7 @@ type TestInstance struct {
 	FailureReason string     `json:"failureReason"`
 	IsUnsupported bool       `json:"isUnsupported"`
 	IsSkipped     bool       `json:"isSkipped"`
+	CancelledAt   *time.Time `json:"cancelledAt"`
 
 	KurlYAML  string `json:"kurlYaml"`
 	KurlURL   string `json:"kurlUrl"`

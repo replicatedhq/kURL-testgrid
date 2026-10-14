@@ -55,7 +55,7 @@ th, td {
     color: #999999;
   }
 
-  &.Unsupported, &.Skipped {
+  &.Unsupported, &.Skipped, &.Cancelled {
     color: #FFC300;
   }
 }

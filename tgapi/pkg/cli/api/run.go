@@ -45,6 +45,10 @@ func RunCmd() *cobra.Command {
 			r.HandleFunc("/api/v1/instance/{instanceId}/logs", handlers.GetInstanceLogs).Methods("GET", "OPTIONS")
 			r.HandleFunc("/api/v1/instance/{instanceId}/sonobuoy", handlers.GetInstanceSonobuoyResults).Methods("GET", "OPTIONS")
 			r.HandleFunc("/api/v1/instance/{nodeId}/node-logs", handlers.GetNodeLogs).Methods("GET")
+			// Browser-facing alias of the cancel endpoint below (the web UI's
+			// API_ENDPOINT includes the /api/v1 prefix). Intentionally
+			// unauthenticated in OSS, consistent with the rest of /api/v1.
+			r.HandleFunc("/api/v1/ref/{refId}/cancel", handlers.CancelRef).Methods("POST", "OPTIONS")
 
 			rAuth.HandleFunc("/v1/ref/{refId}/start", handlers.StartRef).Methods("POST")
 
@@ -68,6 +72,14 @@ func RunCmd() *cobra.Command {
 			r.HandleFunc("/v1/dequeue/instance", handlers.DequeueInstance).Methods("GET")
 			r.HandleFunc("/v1/dequeue/ref/{refId}/instance", handlers.DequeueInstanceWithRef).Methods("GET")
 			r.HandleFunc("/v1/skip/ref/{refId}", handlers.SkipInstances).Methods("POST")
+			// The cancel endpoints are intentionally unauthenticated in OSS,
+			// consistent with /v1/skip and /v1/finish above. Note that cancel can
+			// terminate host-side VMs, so deployments should restrict network
+			// access to tgapi (or front it with auth) accordingly.
+			r.HandleFunc("/v1/ref/{refId}/cancel", handlers.CancelRef).Methods("POST")
+			r.HandleFunc("/v1/instance/{instanceId}/cancel", handlers.CancelInstance).Methods("POST")
+			r.HandleFunc("/v1/instance/{instanceId}/cancelled", handlers.GetInstanceCancelled).Methods("GET")
+			r.HandleFunc("/v1/instances/cancelled", handlers.ListCancelled).Methods("GET")
 
 			r.HandleFunc("/v1/runner/status", handlers.RunnerStatus).Methods("POST")
 
