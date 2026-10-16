@@ -16,11 +16,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	kubevirtv1 "kubevirt.io/api/core/v1"
+	"kubevirt.io/client-go/kubecli"
 )
 
 const (
-	cleanupAfterMinutes = 90
-	timeoutAfterMinutes = 480
+	cleanupAfterMinutes         = 90
+	timeoutAfterMinutes         = 480
+	sendlogsCleanupAfterMinutes = 30
 )
 
 // CleanUpVMIs deletes "Succeeded" VMIs
@@ -30,6 +32,10 @@ func CleanUpVMIs() error {
 		return errors.Wrap(err, "failed to get clientset")
 	}
 
+	return cleanUpVMIs(virtClient)
+}
+
+func cleanUpVMIs(virtClient kubecli.KubevirtClient) error {
 	vmiList, err := virtClient.VirtualMachineInstance(Namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to list vmis")
@@ -79,6 +85,33 @@ func CleanUpVMIs() error {
 			}
 		}
 
+		// -sendlogs VMIs are meant to live for minutes; one stuck in Running
+		// otherwise rides the much longer timeoutAfterMinutes path and holds
+		// a VM slot for hours (sc-140012). Reap it on its own short leash,
+		// regardless of phase checks below, so stuck log shipping doesn't
+		// silently eat fleet capacity.
+		if shouldReapStuckSendlogs(vmi) {
+			reason := "without finishing log shipping"
+			if vmi.Status.Phase == kubevirtv1.Succeeded {
+				reason = "after finishing log shipping"
+			}
+			err := virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi.Name, metav1.DeleteOptions{})
+			switch {
+			case err == nil:
+				// Only log "Reaping" once we know there was something to reap: a
+				// Succeeded sendlogs VMI already removed by the succeeded-cleanup
+				// path above hits the IsNotFound case below instead, so this line
+				// never misreports a no-op second pass as a reap.
+				fmt.Printf("Reaping stuck sendlogs vmi %s: running past the %dm sendlogs leash %s\n", vmi.Name, sendlogsCleanupAfterMinutes, reason)
+				fmt.Printf("Deleted stuck sendlogs vmi %s\n", vmi.Name)
+			case apierrors.IsNotFound(err):
+				// already deleted earlier in this pass (e.g. by the succeeded-cleanup path above)
+			default:
+				fmt.Printf("Failed to delete stuck sendlogs vmi %s: %v\n", vmi.Name, err)
+			}
+			continue
+		}
+
 		// cleanup VMIs that are not running and have not succeeded after 1.5 hours (cleanupAfterMinutes)
 		// or VMIs that are running and have not succeeded after 5 hours (timeoutAfterMinutes)
 		// the in-script timeout for install is 30m, upgrade is 180m
@@ -118,6 +151,16 @@ func CleanUpVMIs() error {
 	}
 
 	return nil
+}
+
+// shouldReapStuckSendlogs reports whether a "-sendlogs" VMI is older than its
+// own short leash (sendlogsCleanupAfterMinutes) and should be reaped
+// regardless of phase, independent of the general cleanupIsTimeout path.
+func shouldReapStuckSendlogs(vmi kubevirtv1.VirtualMachineInstance) bool {
+	if !strings.HasSuffix(vmi.Name, "sendlogs") {
+		return false
+	}
+	return time.Since(vmi.CreationTimestamp.Time).Minutes() > sendlogsCleanupAfterMinutes
 }
 
 // cleanup VMIs that are not running and have not succeeded after 1.5 hours (cleanupAfterMinutes)
