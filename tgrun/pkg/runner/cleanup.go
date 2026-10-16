@@ -25,6 +25,9 @@ const (
 	sendlogsCleanupAfterMinutes = 30
 )
 
+// sendLogs is indirected so tests can stub it out.
+var sendLogs = runnerVmi.SendLogs
+
 // CleanUpVMIs deletes "Succeeded" VMIs
 func CleanUpVMIs() error {
 	virtClient, err := helpers.GetKubevirtClientset()
@@ -42,9 +45,57 @@ func cleanUpVMIs(virtClient kubecli.KubevirtClient) error {
 	}
 
 	for _, vmi := range vmiList.Items {
+		// delete the running sibling nodes of a completed initialprimary
+		// once it has been finished for 10 minutes. this must be keyed off
+		// the completion time rather than the primary's age: tests running
+		// longer than cleanupAfterMinutes would otherwise have their primary
+		// deleted by the age-based branch below before siblings are cleaned.
+		// the primary is kept until the grace period elapses because its
+		// presence is what triggers the sibling cleanup.
+		siblingsPending := false
+		if vmi.Status.Phase == kubevirtv1.Succeeded && strings.HasSuffix(vmi.Name, "-initialprimary") {
+			completedAt := time.Time{}
+			completedAtKnown := false
+			for _, condition := range vmi.Status.PhaseTransitionTimestamps {
+				if condition.Phase == kubevirtv1.Succeeded {
+					completedAt = condition.PhaseTransitionTimestamp.Time
+					completedAtKnown = true
+				}
+			}
+			// without a Succeeded transition timestamp the grace period
+			// cannot be established; don't race sibling deletion — stuck
+			// siblings fall back to the timeout reaper
+			if completedAtKnown && time.Since(completedAt).Minutes() > 10 {
+				vmiPrefix := strings.TrimSuffix(vmi.Name, "-initialprimary")
+				for _, vmi2 := range vmiList.Items {
+					// sendlogs VMIs belong to the instance but must not be
+					// reaped here: deleting one mid-run strands the logs
+					if strings.HasPrefix(vmi2.Name, vmiPrefix+"-") && !strings.HasSuffix(vmi2.Name, "sendlogs") && vmi2.Status.Phase == kubevirtv1.Running {
+						err := virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi2.Name, metav1.DeleteOptions{})
+						if err != nil && !apierrors.IsNotFound(err) {
+							fmt.Printf("Failed to delete secondary vmi %s: %v\n", vmi2.Name, err)
+							// keep the primary so the next pass retries
+							// instead of orphaning the sibling
+							siblingsPending = true
+						} else {
+							fmt.Printf("Delete secondary vmi %s\n", vmi2.Name)
+							// ship the sibling's logs like the timeout path does
+							if err := sendLogs(vmi2.Annotations[runnerVmi.ApiEndpointAnnotation], vmi2.Name); err != nil {
+								fmt.Printf("Failed to send logs of secondary vmi %s: %v\n", vmi2.Name, err)
+							} else {
+								fmt.Printf("Sent logs for secondary vmi %s\n", vmi2.Name)
+							}
+						}
+					}
+				}
+			} else if completedAtKnown {
+				siblingsPending = true
+			}
+		}
+
 		// cleanup succeeded VMIs
 		// leaving them for a few hours for debug cases
-		if vmi.Status.Phase == kubevirtv1.Succeeded && time.Since(vmi.CreationTimestamp.Time).Minutes() > cleanupAfterMinutes {
+		if vmi.Status.Phase == kubevirtv1.Succeeded && !siblingsPending && time.Since(vmi.CreationTimestamp.Time).Minutes() > cleanupAfterMinutes {
 			err := virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi.Name, metav1.DeleteOptions{})
 			if err != nil {
 				fmt.Printf("Failed to delete successful vmi %s: %v\n", vmi.Name, err)
@@ -54,33 +105,11 @@ func cleanUpVMIs(virtClient kubecli.KubevirtClient) error {
 
 			if !strings.HasSuffix(vmi.Name, "sendlogs") {
 				// make a VMI to send the logs and nothing else
-				err = runnerVmi.SendLogs(vmi.Annotations[runnerVmi.ApiEndpointAnnotation], vmi.Name)
+				err = sendLogs(vmi.Annotations[runnerVmi.ApiEndpointAnnotation], vmi.Name)
 				if err != nil {
 					fmt.Printf("Failed to send logs of successful vmi %s: %v\n", vmi.Name, err)
 				} else {
 					fmt.Printf("Sent logs for successful vmi %s\n", vmi.Name)
-				}
-			}
-		} else if vmi.Status.Phase == kubevirtv1.Succeeded && strings.HasSuffix(vmi.Name, "-initialprimary") {
-			// cleanup secondary nodes if the primary has been done for 10 minutes
-
-			completedAt := time.Time{}
-			for _, condition := range vmi.Status.PhaseTransitionTimestamps {
-				if condition.Phase == kubevirtv1.Succeeded {
-					completedAt = condition.PhaseTransitionTimestamp.Time
-				}
-			}
-			if time.Since(completedAt).Minutes() > 10 {
-				vmiPrefix := strings.TrimSuffix(vmi.Name, "-initialprimary")
-				for _, vmi2 := range vmiList.Items {
-					if strings.HasPrefix(vmi2.Name, vmiPrefix) && vmi.Status.Phase == kubevirtv1.Running {
-						err := virtClient.VirtualMachineInstance(Namespace).Delete(context.TODO(), vmi2.Name, metav1.DeleteOptions{})
-						if err != nil {
-							fmt.Printf("Failed to delete secondary vmi %s: %v\n", vmi.Name, err)
-						} else {
-							fmt.Printf("Delete secondary vmi %s\n", vmi.Name)
-						}
-					}
 				}
 			}
 		}
@@ -140,7 +169,7 @@ func cleanUpVMIs(virtClient kubecli.KubevirtClient) error {
 
 			if !strings.HasSuffix(vmi.Name, "sendlogs") {
 				// make a VMI to send the logs and nothing else
-				err = runnerVmi.SendLogs(vmi.Annotations[runnerVmi.ApiEndpointAnnotation], vmi.Name)
+				err = sendLogs(vmi.Annotations[runnerVmi.ApiEndpointAnnotation], vmi.Name)
 				if err != nil {
 					fmt.Printf("Failed to send logs of deleted long-running vmi %s: %v\n", vmi.Name, err)
 				} else {
