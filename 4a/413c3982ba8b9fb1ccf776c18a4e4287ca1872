@@ -1,0 +1,24 @@
+tgrun/pkg/runner/cleanup.go
+  s_b4b10d57826db3::t_ef3667487b2069 75-77
+  s_b4b10d57826db3::t_7150980dbc9524 73
+tgrun/pkg/runner/cleanup_test.go
+  s_b4b10d57826db3::t_a424e859526795 155-181
+  s_b4b10d57826db3::t_ba1a4b9660ddb7 5
+  s_b4b10d57826db3::t_a2a8afba86fc33 127-128,148-150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4a413c3982ba8b9fb1ccf776c18a4e4287ca1872",
+  "prompts": {},
+  "sessions": {
+    "s_b4b10d57826db3": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ebda0b3e5ffeSyHryHj7TcWRLb",
+        "model": "accounts/fireworks/routers/kimi-latest"
+      },
+      "human_author": "Xav Paice <xav@replicated.com>"
+    }
+  }
+}
