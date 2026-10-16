@@ -1,0 +1,19 @@
+tgapi/kustomize/overlays/latitude-production/deployment.yaml
+  s_9f5840c63203f1::t_d3eb2e7a13cb23 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2a168be21b48324bfb0ed60f641d61c556e5f935",
+  "prompts": {},
+  "sessions": {
+    "s_9f5840c63203f1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13c41-130b-7bf2-9946-7fd45d47feb2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Josh Sandlin <joshs@replicated.com>"
+    }
+  }
+}

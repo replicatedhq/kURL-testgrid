@@ -1,0 +1,40 @@
+tgapi/kustomize/overlays/latitude-production/kustomization.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-9
+tgapi/kustomize/overlays/latitude-staging/disruptionbudget.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-9
+tgapi/kustomize/overlays/latitude-staging/service.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-14
+.github/workflows/deploy.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 8-12,14,28-30,34,36,49-54,58,68,70-74,77-88
+  s_9f5840c63203f1::t_fb4f8b986ec452 21,23,32,97,100,110
+tgapi/kustomize/overlays/latitude-production/deployment.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-49
+tgapi/kustomize/overlays/latitude-staging/kustomization.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-9
+kustomize/overlays/latitude-production/kustomization.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-4
+kustomize/overlays/latitude-staging/kustomization.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-4
+tgapi/kustomize/overlays/latitude-production/service.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-14
+tgapi/kustomize/overlays/latitude-staging/deployment.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-52
+tgapi/kustomize/overlays/latitude-production/disruptionbudget.yaml
+  s_9f5840c63203f1::t_4ff3c3997999ab 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2eb7b8a3b065d871c5decdefbb2abd2a6c8ffaf8",
+  "prompts": {},
+  "sessions": {
+    "s_9f5840c63203f1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13c41-130b-7bf2-9946-7fd45d47feb2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Josh Sandlin <joshs@replicated.com>"
+    }
+  }
+}

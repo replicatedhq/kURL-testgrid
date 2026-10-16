@@ -1,0 +1,31 @@
+.github/workflows/deploy.yaml
+  s_9f5840c63203f1::t_952e4391b30c8e 54,72,74-75
+migrations/kustomize/overlays/latitude-production/testgrid-postgres.yaml
+  s_9f5840c63203f1::t_952e4391b30c8e 1-16
+migrations/kustomize/overlays/latitude-production/kustomization.yaml
+  s_9f5840c63203f1::t_952e4391b30c8e 1-7
+migrations/kustomize/overlays/latitude-staging/testgrid-postgres.yaml
+  s_9f5840c63203f1::t_952e4391b30c8e 1-16
+kustomize/overlays/latitude-production/kustomization.yaml
+  s_9f5840c63203f1::t_952e4391b30c8e 1-2
+kustomize/overlays/latitude-staging/kustomization.yaml
+  s_9f5840c63203f1::t_952e4391b30c8e 1-2
+migrations/kustomize/overlays/latitude-staging/kustomization.yaml
+  s_9f5840c63203f1::t_952e4391b30c8e 1-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1a5028dd70f3ff93c9275369a57232b1d9687678",
+  "prompts": {},
+  "sessions": {
+    "s_9f5840c63203f1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13c41-130b-7bf2-9946-7fd45d47feb2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Josh Sandlin <joshs@replicated.com>"
+    }
+  }
+}
