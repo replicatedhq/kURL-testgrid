@@ -324,6 +324,23 @@ func Test_cleanUpVMIs_finishedInitialPrimary(t *testing.T) {
 			wantDeleted:  []string{"aaaaaaaaaaaaaaaa-secondary-0"},
 			wantLogsSent: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
 		},
+		{
+			name: "does not race sibling deletion when the transition timestamp is missing",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				vmiWithAge("aaaaaaaaaaaaaaaa-initialprimary", kubevirtv1.Succeeded, 20*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 20*time.Minute),
+			},
+			wantDeleted: nil,
+		},
+		{
+			name: "aged initialprimary without a transition timestamp is still cleaned by age",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				vmiWithAge("aaaaaaaaaaaaaaaa-initialprimary", kubevirtv1.Succeeded, 3*time.Hour),
+				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 3*time.Hour),
+			},
+			wantDeleted:  []string{"aaaaaaaaaaaaaaaa-initialprimary"},
+			wantLogsSent: []string{"aaaaaaaaaaaaaaaa-initialprimary"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

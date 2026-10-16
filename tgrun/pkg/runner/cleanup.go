@@ -55,12 +55,17 @@ func cleanUpVMIs(virtClient kubecli.KubevirtClient) error {
 		siblingsPending := false
 		if vmi.Status.Phase == kubevirtv1.Succeeded && strings.HasSuffix(vmi.Name, "-initialprimary") {
 			completedAt := time.Time{}
+			completedAtKnown := false
 			for _, condition := range vmi.Status.PhaseTransitionTimestamps {
 				if condition.Phase == kubevirtv1.Succeeded {
 					completedAt = condition.PhaseTransitionTimestamp.Time
+					completedAtKnown = true
 				}
 			}
-			if time.Since(completedAt).Minutes() > 10 {
+			// without a Succeeded transition timestamp the grace period
+			// cannot be established; don't race sibling deletion — stuck
+			// siblings fall back to the timeout reaper
+			if completedAtKnown && time.Since(completedAt).Minutes() > 10 {
 				vmiPrefix := strings.TrimSuffix(vmi.Name, "-initialprimary")
 				for _, vmi2 := range vmiList.Items {
 					// sendlogs VMIs belong to the instance but must not be
@@ -83,7 +88,7 @@ func cleanUpVMIs(virtClient kubecli.KubevirtClient) error {
 						}
 					}
 				}
-			} else {
+			} else if completedAtKnown {
 				siblingsPending = true
 			}
 		}
