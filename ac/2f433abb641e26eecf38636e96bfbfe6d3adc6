@@ -1,0 +1,40 @@
+tgrun/pkg/runner/cleanup.go
+  s_b4b10d57826db3::t_5e4b5f290ec262 68
+  s_b4b10d57826db3::t_6a691b0dd07456 48-55,62,80-84,87,97
+  s_b4b10d57826db3::t_61ba16c4cde033 28-30
+  s_b4b10d57826db3::t_4cfed64fbb76d3 39-40
+  s_b4b10d57826db3::t_7150980dbc9524 70
+  s_b4b10d57826db3::t_aabba730550d2d 71,76
+  s_b4b10d57826db3::t_fcb2fe9a2dbf0a 66-67
+  s_b4b10d57826db3::t_ef3667487b2069 72-74
+  s_b4b10d57826db3::t_f9f43c7bcde925 56
+  s_b4b10d57826db3::t_1370d66ff314a7 161
+  s_b4b10d57826db3::t_1fda47b0408b07 57-61
+  s_b4b10d57826db3::t_1c1ebf410b16e5 63-65
+  s_b4b10d57826db3::t_89a47d06614456 75
+  s_b4b10d57826db3::t_00f9c9c21246e6 77-79
+tgrun/pkg/runner/cleanup_test.go
+  s_b4b10d57826db3::t_a21a6021758295 1-3,7-10,13,15,17-18,234,241,245-248,252,254,271-273,276,278-281,284,286-289,294,296,315-318,320,329,337-338,366,368
+  s_b4b10d57826db3::t_06c2348e5ab697 330,333
+  s_b4b10d57826db3::t_ba1a4b9660ddb7 4
+  s_b4b10d57826db3::t_ad3829ae8433f8 237-240,255-257,260,262-265,268,270,297-299,303,305
+  s_b4b10d57826db3::t_a2a8afba86fc33 336
+  s_b4b10d57826db3::t_a424e859526795 343,344-348,350,363
+  s_b4b10d57826db3::t_9d93afd4b2942e 306-308,312,314
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ac2f433abb641e26eecf38636e96bfbfe6d3adc6",
+  "prompts": {},
+  "sessions": {
+    "s_b4b10d57826db3": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ebda0b3e5ffeSyHryHj7TcWRLb",
+        "model": "accounts/fireworks/routers/kimi-latest"
+      },
+      "human_author": "Xav Paice <xav@replicated.com>"
+    }
+  }
+}
