@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"sort"
 	"testing"
 	"time"
 
@@ -233,15 +234,21 @@ func succeededVMIWithCompletion(name string, age, completedAgo time.Duration) ku
 // call fails the test via gomock.
 func Test_cleanUpVMIs_finishedInitialPrimary(t *testing.T) {
 	// the age-based delete of an initialprimary ships its logs via a real
-	// kubernetes clientset; stub it out
+	// kubernetes clientset; stub it out and record which nodes logs were
+	// shipped for
+	var sentLogs []string
 	stubSendLogs := sendLogs
-	sendLogs = func(string, string) error { return nil }
+	sendLogs = func(_ string, nodeID string) error {
+		sentLogs = append(sentLogs, nodeID)
+		return nil
+	}
 	t.Cleanup(func() { sendLogs = stubSendLogs })
 
 	tests := []struct {
-		name        string
-		vmis        []kubevirtv1.VirtualMachineInstance
-		wantDeleted []string
+		name         string
+		vmis         []kubevirtv1.VirtualMachineInstance
+		wantDeleted  []string
+		wantLogsSent []string
 	}{
 		{
 			name: "deletes running sibling nodes once the initialprimary has been finished for 10 minutes",
@@ -250,7 +257,8 @@ func Test_cleanUpVMIs_finishedInitialPrimary(t *testing.T) {
 				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 20*time.Minute),
 				vmiWithAge("aaaaaaaaaaaaaaaa-primary-1", kubevirtv1.Running, 20*time.Minute),
 			},
-			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0", "aaaaaaaaaaaaaaaa-primary-1"},
+			wantDeleted:  []string{"aaaaaaaaaaaaaaaa-secondary-0", "aaaaaaaaaaaaaaaa-primary-1"},
+			wantLogsSent: []string{"aaaaaaaaaaaaaaaa-secondary-0", "aaaaaaaaaaaaaaaa-primary-1"},
 		},
 		{
 			name: "deletes running sibling nodes of long tests finished after the age-based cleanup",
@@ -258,7 +266,8 @@ func Test_cleanUpVMIs_finishedInitialPrimary(t *testing.T) {
 				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 3*time.Hour, 15*time.Minute),
 				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 3*time.Hour),
 			},
-			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0", "aaaaaaaaaaaaaaaa-initialprimary"},
+			wantDeleted:  []string{"aaaaaaaaaaaaaaaa-secondary-0", "aaaaaaaaaaaaaaaa-initialprimary"},
+			wantLogsSent: []string{"aaaaaaaaaaaaaaaa-secondary-0", "aaaaaaaaaaaaaaaa-initialprimary"},
 		},
 		{
 			name: "keeps the initialprimary of a long test until the sibling grace period elapses",
@@ -292,7 +301,8 @@ func Test_cleanUpVMIs_finishedInitialPrimary(t *testing.T) {
 				vmiWithAge("bbbbbbbbbbbbbbbb-initialprimary", kubevirtv1.Running, 20*time.Minute),
 				vmiWithAge("bbbbbbbbbbbbbbbb-secondary-0", kubevirtv1.Running, 20*time.Minute),
 			},
-			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
+			wantDeleted:  []string{"aaaaaaaaaaaaaaaa-secondary-0"},
+			wantLogsSent: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
 		},
 		{
 			name: "does not match instance ids that merely share a prefix",
@@ -301,7 +311,8 @@ func Test_cleanUpVMIs_finishedInitialPrimary(t *testing.T) {
 				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 20*time.Minute),
 				vmiWithAge("aaaaaaaaaaaaaaaab-secondary-0", kubevirtv1.Running, 20*time.Minute),
 			},
-			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
+			wantDeleted:  []string{"aaaaaaaaaaaaaaaa-secondary-0"},
+			wantLogsSent: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
 		},
 		{
 			name: "keeps a running sendlogs vmi of the same instance",
@@ -310,13 +321,15 @@ func Test_cleanUpVMIs_finishedInitialPrimary(t *testing.T) {
 				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 20*time.Minute),
 				vmiWithAge("aaaaaaaaaaaaaaaa-initialprimary-sendlogs", kubevirtv1.Running, 5*time.Minute),
 			},
-			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
+			wantDeleted:  []string{"aaaaaaaaaaaaaaaa-secondary-0"},
+			wantLogsSent: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 			ctrl := gomock.NewController(t)
+			sentLogs = nil
 
 			mockVMIClient := kubecli.NewMockVirtualMachineInstanceInterface(ctrl)
 			mockVMIClient.EXPECT().
@@ -332,6 +345,10 @@ func Test_cleanUpVMIs_finishedInitialPrimary(t *testing.T) {
 			mockClient.EXPECT().VirtualMachineInstance(Namespace).Return(mockVMIClient).AnyTimes()
 
 			req.NoError(cleanUpVMIs(mockClient))
+
+			sort.Strings(sentLogs)
+			sort.Strings(tt.wantLogsSent)
+			req.Equal(tt.wantLogsSent, sentLogs)
 		})
 	}
 }

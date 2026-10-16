@@ -74,6 +74,12 @@ func cleanUpVMIs(virtClient kubecli.KubevirtClient) error {
 							siblingsPending = true
 						} else {
 							fmt.Printf("Delete secondary vmi %s\n", vmi2.Name)
+							// ship the sibling's logs like the timeout path does
+							if err := sendLogs(vmi2.Annotations[runnerVmi.ApiEndpointAnnotation], vmi2.Name); err != nil {
+								fmt.Printf("Failed to send logs of secondary vmi %s: %v\n", vmi2.Name, err)
+							} else {
+								fmt.Printf("Sent logs for secondary vmi %s\n", vmi2.Name)
+							}
 						}
 					}
 				}
