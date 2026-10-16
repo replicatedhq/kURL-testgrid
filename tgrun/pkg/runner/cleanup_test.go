@@ -212,3 +212,157 @@ func Test_cleanUpVMIs_doubleDeleteSendlogs(t *testing.T) {
 		})
 	}
 }
+
+// succeededVMIWithCompletion returns a Succeeded VMI created age ago whose
+// Succeeded phase transition happened completedAgo ago.
+func succeededVMIWithCompletion(name string, age, completedAgo time.Duration) kubevirtv1.VirtualMachineInstance {
+	v := vmiWithAge(name, kubevirtv1.Succeeded, age)
+	v.Status.PhaseTransitionTimestamps = []kubevirtv1.VirtualMachineInstancePhaseTransitionTimestamp{
+		{
+			Phase:                    kubevirtv1.Succeeded,
+			PhaseTransitionTimestamp: metav1.NewTime(time.Now().Add(-completedAgo)),
+		},
+	}
+	return v
+}
+
+// Test_cleanUpVMIs_finishedInitialPrimary covers sibling cleanup of completed
+// multi-node tests (sc-140168): running primary/secondary nodes are deleted
+// once the initialprimary has been finished for 10 minutes, regardless of how
+// long the test ran. Deletion expectations are exact: any unexpected Delete
+// call fails the test via gomock.
+func Test_cleanUpVMIs_finishedInitialPrimary(t *testing.T) {
+	// the age-based delete of an initialprimary ships its logs via a real
+	// kubernetes clientset; stub it out
+	stubSendLogs := sendLogs
+	sendLogs = func(string, string) error { return nil }
+	t.Cleanup(func() { sendLogs = stubSendLogs })
+
+	tests := []struct {
+		name        string
+		vmis        []kubevirtv1.VirtualMachineInstance
+		wantDeleted []string
+	}{
+		{
+			name: "deletes running sibling nodes once the initialprimary has been finished for 10 minutes",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 20*time.Minute, 15*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 20*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-primary-1", kubevirtv1.Running, 20*time.Minute),
+			},
+			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0", "aaaaaaaaaaaaaaaa-primary-1"},
+		},
+		{
+			name: "deletes running sibling nodes of long tests finished after the age-based cleanup",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 3*time.Hour, 15*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 3*time.Hour),
+			},
+			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0", "aaaaaaaaaaaaaaaa-initialprimary"},
+		},
+		{
+			name: "keeps the initialprimary of a long test until the sibling grace period elapses",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 3*time.Hour, 5*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 3*time.Hour),
+			},
+			wantDeleted: nil,
+		},
+		{
+			name: "keeps succeeded sibling nodes for the age-based cleanup",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 20*time.Minute, 15*time.Minute),
+				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-secondary-0", 20*time.Minute, 16*time.Minute),
+			},
+			wantDeleted: nil,
+		},
+		{
+			name: "keeps running sibling nodes during the 10 minute grace period",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 20*time.Minute, 5*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 20*time.Minute),
+			},
+			wantDeleted: nil,
+		},
+		{
+			name: "leaves other instances alone",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 20*time.Minute, 15*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 20*time.Minute),
+				vmiWithAge("bbbbbbbbbbbbbbbb-initialprimary", kubevirtv1.Running, 20*time.Minute),
+				vmiWithAge("bbbbbbbbbbbbbbbb-secondary-0", kubevirtv1.Running, 20*time.Minute),
+			},
+			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
+		},
+		{
+			name: "does not match instance ids that merely share a prefix",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 20*time.Minute, 15*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 20*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaab-secondary-0", kubevirtv1.Running, 20*time.Minute),
+			},
+			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
+		},
+		{
+			name: "keeps a running sendlogs vmi of the same instance",
+			vmis: []kubevirtv1.VirtualMachineInstance{
+				succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 20*time.Minute, 15*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 20*time.Minute),
+				vmiWithAge("aaaaaaaaaaaaaaaa-initialprimary-sendlogs", kubevirtv1.Running, 5*time.Minute),
+			},
+			wantDeleted: []string{"aaaaaaaaaaaaaaaa-secondary-0"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := require.New(t)
+			ctrl := gomock.NewController(t)
+
+			mockVMIClient := kubecli.NewMockVirtualMachineInstanceInterface(ctrl)
+			mockVMIClient.EXPECT().
+				List(gomock.Any(), gomock.Any()).
+				Return(&kubevirtv1.VirtualMachineInstanceList{Items: tt.vmis}, nil)
+			for _, name := range tt.wantDeleted {
+				mockVMIClient.EXPECT().
+					Delete(gomock.Any(), name, gomock.Any()).
+					Return(nil)
+			}
+
+			mockClient := kubecli.NewMockKubevirtClient(ctrl)
+			mockClient.EXPECT().VirtualMachineInstance(Namespace).Return(mockVMIClient).AnyTimes()
+
+			req.NoError(cleanUpVMIs(mockClient))
+		})
+	}
+}
+
+// Test_cleanUpVMIs_keepsPrimaryWhenSiblingDeleteFails covers a transient
+// sibling Delete error on the pass that would also delete the age-expired
+// initialprimary: the primary must survive so the next pass can retry instead
+// of orphaning the sibling until the timeout reaper.
+func Test_cleanUpVMIs_keepsPrimaryWhenSiblingDeleteFails(t *testing.T) {
+	stubSendLogs := sendLogs
+	sendLogs = func(string, string) error { return nil }
+	t.Cleanup(func() { sendLogs = stubSendLogs })
+
+	req := require.New(t)
+	ctrl := gomock.NewController(t)
+
+	mockVMIClient := kubecli.NewMockVirtualMachineInstanceInterface(ctrl)
+	mockVMIClient.EXPECT().
+		List(gomock.Any(), gomock.Any()).
+		Return(&kubevirtv1.VirtualMachineInstanceList{Items: []kubevirtv1.VirtualMachineInstance{
+			succeededVMIWithCompletion("aaaaaaaaaaaaaaaa-initialprimary", 3*time.Hour, 15*time.Minute),
+			vmiWithAge("aaaaaaaaaaaaaaaa-secondary-0", kubevirtv1.Running, 3*time.Hour),
+		}}, nil)
+	// the sibling delete fails; there is deliberately no Delete expectation
+	// for the initialprimary, so deleting it fails the test
+	mockVMIClient.EXPECT().
+		Delete(gomock.Any(), "aaaaaaaaaaaaaaaa-secondary-0", gomock.Any()).
+		Return(errors.New("connection refused"))
+
+	mockClient := kubecli.NewMockKubevirtClient(ctrl)
+	mockClient.EXPECT().VirtualMachineInstance(Namespace).Return(mockVMIClient).AnyTimes()
+
+	req.NoError(cleanUpVMIs(mockClient))
+}
