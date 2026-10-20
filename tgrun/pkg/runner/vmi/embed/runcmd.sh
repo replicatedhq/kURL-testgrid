@@ -333,7 +333,21 @@ function disable_internet() {
     fi
     TESTGRID_DOMAIN=$(echo "$TESTGRID_APIENDPOINT" | sed -e "s.^https://..")
     echo "testgrid API endpoint: $TESTGRID_APIENDPOINT domain: $TESTGRID_DOMAIN"
-    APIENDPOINT_IPS=$(dig "$TESTGRID_DOMAIN" | grep 'IN A' | awk '{ print $5 }')
+    # Resolve the API IPs to allowlist. Do not parse dig's pretty-printed
+    # output: record columns are tab-separated for short owner names and
+    # space-separated for long ones, so "grep 'IN A'" silently matches
+    # nothing when the API has a direct A record — the allowlist comes out
+    # empty, the REJECT rule below cuts the VM off from the API, and the
+    # instance is stuck "running" forever. dig +short prints bare record
+    # data, one per line, regardless of owner-name length.
+    APIENDPOINT_IPS=$(dig +short "$TESTGRID_DOMAIN" A | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort -u)
+    if [ -z "$APIENDPOINT_IPS" ]; then
+        # fall back to the system resolver if dig is unavailable or fails
+        APIENDPOINT_IPS=$(getent ahostsv4 "$TESTGRID_DOMAIN" | awk '{ print $1 }' | sort -u)
+    fi
+    if [ -z "$APIENDPOINT_IPS" ]; then
+        echo "WARNING: could not resolve $TESTGRID_DOMAIN - testgrid API will be unreachable in airgap mode"
+    fi
     # and allow access to them
     for i in $APIENDPOINT_IPS; do
         echo "allowing access to $i"
