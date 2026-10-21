@@ -346,7 +346,16 @@ function disable_internet() {
         APIENDPOINT_IPS=$(getent ahostsv4 "$TESTGRID_DOMAIN" | awk '{ print $1 }' | sort -u)
     fi
     if [ -z "$APIENDPOINT_IPS" ]; then
-        echo "WARNING: could not resolve $TESTGRID_DOMAIN - testgrid API will be unreachable in airgap mode"
+        # Empty resolution is terminal: without an allowlist entry the REJECT
+        # rule below cuts the VM off from the testgrid API entirely, so the
+        # test could report neither failure nor success and the instance would
+        # be stuck "running" forever. Fail fast here, while outbound traffic
+        # still works, so the failure is actually reported.
+        echo "could not resolve $TESTGRID_DOMAIN - cannot allowlist the testgrid API in airgap mode"
+        send_logs
+        report_failure "airgap_dns"
+        report_status_update "failed"
+        exit 1
     fi
     # and allow access to them
     for i in $APIENDPOINT_IPS; do
