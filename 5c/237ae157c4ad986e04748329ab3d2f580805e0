@@ -1,0 +1,19 @@
+tgrun/pkg/runner/vmi/embed/runcmd.sh
+  s_dc69d7b325cf41::t_f436bb53c18ad9 349-358
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5c237ae157c4ad986e04748329ab3d2f580805e0",
+  "prompts": {},
+  "sessions": {
+    "s_dc69d7b325cf41": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ea4b04496ffe917pcXaVktASNn",
+        "model": "accounts/fireworks/routers/kimi-latest"
+      },
+      "human_author": "Xav Paice <xav@replicated.com>"
+    }
+  }
+}
